@@ -12,8 +12,7 @@ namespace lab1
         UdpClient udpClient;
         UdpClient udpServer;
         static int multicastPort = 12345;
-        Dictionary<string, DateTime> activeCopies;
-        Dictionary<string, IPEndPoint> activateIP;
+        Dictionary<IPEndPoint, DateTime> activeCopies;
         AddressFamily addressFamily;
         public UdpMulticast (IPAddress multicastIP)
         {
@@ -35,8 +34,7 @@ namespace lab1
             if (addressFamily == AddressFamily.InterNetworkV6) udpServer.JoinMulticastGroup(multicastIP);
             else udpServer.JoinMulticastGroup(multicastIP, IPAddress.Any);
 
-            activeCopies = new Dictionary<string, DateTime>();
-            activateIP = new Dictionary<string, IPEndPoint>();
+            activeCopies = new Dictionary<IPEndPoint, DateTime>();
         }
 
         public void SearchMulticastCopies ()
@@ -53,7 +51,7 @@ namespace lab1
 
             while (true)
             {
-                Printer.PrintActiveIP(activeCopies, activateIP);
+                Printer.PrintActiveIP(activeCopies);
                 Thread.Sleep(1000);
             }
         }
@@ -80,13 +78,12 @@ namespace lab1
 
                 lock (activeCopies)
                 {
-                    if (!activeCopies.ContainsKey(message))
+                    if (!activeCopies.ContainsKey(remoteEndPoint))
                     {
-                        Console.WriteLine($"Обнаружена новая копия: {remoteEndPoint.ToString}:{message}");
+                        Console.WriteLine($"Обнаружена новая копия: {remoteEndPoint.ToString()}");
                     }
 
-                    activeCopies[message] = DateTime.Now;
-                    activateIP[message] = remoteEndPoint;
+                    activeCopies[remoteEndPoint] = DateTime.Now;
                 }
             }
         }
