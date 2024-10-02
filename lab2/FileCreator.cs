@@ -6,21 +6,21 @@ namespace lab2
     {
         string name;
         string directory;
-        public FileCreator (string name, string directory)
+        public FileCreator (string directory, string name)
         {
             this.name = name;
             this.directory = directory;
         }
 
-        public string createName ()
+        public string CreateName ()
         {
             StringBuilder builder = new StringBuilder();
-            builder.Append(directory).Append("/uploads/").Append(Path.GetFileName(name));
-            renameFile(builder);
+            builder.Append(directory).Append(name);
+            RenameFile(builder);
             return builder.ToString();
         }
 
-        void renameFile (StringBuilder builder)
+        void RenameFile (StringBuilder builder)
         {
             int ind = 0;
             for (int i = builder.Length - 1; i >= 0; i--)

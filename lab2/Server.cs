@@ -8,7 +8,8 @@ using System.Diagnostics;
 
 namespace lab2
 {
-    public class Server {
+    public class Server 
+    {
         IPEndPoint point;
         TcpListener listener;
         string directory;
@@ -33,12 +34,12 @@ namespace lab2
             while (true)
             {
                 TcpClient socket = listener.AcceptTcpClient();
-                Thread fileThread = new Thread(receiveFile);
+                Thread fileThread = new Thread(ReceiveFile);
                 fileThread.Start(socket);
             }
         }
 
-        void receiveFile (object? obj) 
+        void ReceiveFile (object? obj) 
         {   
             if (obj is TcpClient socket)
             {
@@ -59,7 +60,7 @@ namespace lab2
 
                 string name = Encoding.UTF8.GetString(fileName).TrimEnd('\0').Trim();
                 FileCreator fileCreator = new FileCreator(directory, Path.GetFileName(name));
-                string newFileName = fileCreator.createName();
+                string newFileName = fileCreator.CreateName();
                 
                 Console.WriteLine(newFileName);
 

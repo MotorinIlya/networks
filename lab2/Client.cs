@@ -9,8 +9,8 @@ namespace lab2
         string host;
         int port;
         TcpClient client;
-        static const int ACCEPT = 2;
-        static const int SIZE_DATA = 4096;
+        static int ACCEPT = 2;
+        static int SIZE_DATA = 4096;
         public Client (string host, int port)
         {
             this.host = host;
@@ -18,7 +18,7 @@ namespace lab2
             client = new TcpClient();
         }
 
-        public void sendFile (string file) 
+        public void SendFile (string file) 
         {
             try
             {

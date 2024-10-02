@@ -24,7 +24,7 @@ namespace lab2
                 else 
                 {
                     Client client = new Client(args[2], int.Parse(args[3]));
-                    client.sendFile(args[1]);
+                    client.SendFile(args[1]);
                 }
             }
         }
