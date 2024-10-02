@@ -10,7 +10,8 @@ namespace lab1
         IPAddress multicastIP;
         string uniqString;
         UdpClient udpClient;
-        static int multicastPort = 12346;
+        UdpClient udpServer;
+        static int multicastPort = 12345;
         Dictionary<string, DateTime> activeCopies;
         Dictionary<string, IPEndPoint> activateIP;
         AddressFamily addressFamily;
@@ -20,11 +21,19 @@ namespace lab1
             uniqString = RandomString.getRandomString(10);
             addressFamily = multicastIP.AddressFamily;
 
-            udpClient = new UdpClient(addressFamily == AddressFamily.InterNetworkV6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork);
+            udpClient = new UdpClient(0, addressFamily == AddressFamily.InterNetworkV6 ? 
+                                        AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork);
             udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
             if (addressFamily == AddressFamily.InterNetworkV6) udpClient.JoinMulticastGroup(multicastIP);
             else udpClient.JoinMulticastGroup(multicastIP, IPAddress.Any);
+
+            udpServer = new UdpClient(addressFamily == AddressFamily.InterNetworkV6 ? 
+                                        AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork);
+            udpServer.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+            if (addressFamily == AddressFamily.InterNetworkV6) udpServer.JoinMulticastGroup(multicastIP);
+            else udpServer.JoinMulticastGroup(multicastIP, IPAddress.Any);
 
             activeCopies = new Dictionary<string, DateTime>();
             activateIP = new Dictionary<string, IPEndPoint>();
@@ -32,8 +41,9 @@ namespace lab1
 
         public void SearchMulticastCopies ()
         {
-            IPEndPoint localEndPoint = new IPEndPoint(addressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, multicastPort);
-            //udpClient.Client.Bind(localEndPoint);
+            IPEndPoint localEndPoint = new IPEndPoint(addressFamily == AddressFamily.InterNetworkV6 ? 
+                                                        IPAddress.IPv6Any : IPAddress.Any, multicastPort);
+            udpServer.Client.Bind(localEndPoint);
 
             Thread receiveThread = new Thread(ReceiveMessages);
             receiveThread.Start();
@@ -49,7 +59,7 @@ namespace lab1
         }
         void SendMessages()
         {
-            IPEndPoint multicastEndPoint = new IPEndPoint(multicastIP, 0);
+            IPEndPoint multicastEndPoint = new IPEndPoint(multicastIP, multicastPort);
             while (true)
             {
                 byte[] data = Encoding.UTF8.GetBytes(uniqString);
@@ -65,7 +75,7 @@ namespace lab1
 
             while (true)
             {
-                byte[] data = udpClient.Receive(ref remoteEndPoint);
+                byte[] data = udpServer.Receive(ref remoteEndPoint);
                 string message = Encoding.UTF8.GetString(data);
 
                 lock (activeCopies)
