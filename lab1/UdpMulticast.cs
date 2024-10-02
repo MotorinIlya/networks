@@ -51,7 +51,7 @@ namespace lab1
 
             while (true)
             {
-                Printer.PrintActiveIP(activeCopies);
+                Printer.PrintRemoveIP(activeCopies);
                 Thread.Sleep(1000);
             }
         }
@@ -80,7 +80,8 @@ namespace lab1
                 {
                     if (!activeCopies.ContainsKey(remoteEndPoint))
                     {
-                        Console.WriteLine($"Обнаружена новая копия: {remoteEndPoint.ToString()}");
+                        activeCopies[remoteEndPoint] = DateTime.Now;
+                        Printer.PrintNewIP(activeCopies, remoteEndPoint);
                     }
 
                     activeCopies[remoteEndPoint] = DateTime.Now;

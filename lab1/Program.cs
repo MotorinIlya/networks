@@ -1,5 +1,5 @@
 ﻿using System.Net;
-
+using System;
 
 namespace lab1
 {
@@ -9,12 +9,12 @@ namespace lab1
         {
             Console.WriteLine("Start program");
 
-            string multicastAddress = Console.ReadLine();
+            string? multicastAddress = Console.ReadLine();
 
-            IPAddress multicastIP;
+            IPAddress? multicastIP;
             if (!IPAddress.TryParse(multicastAddress, out multicastIP))
             {
-                Console.WriteLine("bad format multicast addres.");
+                Console.WriteLine("bad format multicast address.");
                 return;
             }
 
