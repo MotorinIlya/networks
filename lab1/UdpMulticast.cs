@@ -1,14 +1,12 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System;
 
 namespace lab1
 {
     class UdpMulticast
     {
         IPAddress multicastIP;
-        string uniqString;
         UdpClient udpClient;
         UdpClient udpServer;
         static int multicastPort = 12345;
@@ -17,7 +15,6 @@ namespace lab1
         public UdpMulticast (IPAddress multicastIP)
         {
             this.multicastIP = multicastIP;
-            uniqString = RandomString.getRandomString(10);
             addressFamily = multicastIP.AddressFamily;
 
             udpClient = new UdpClient(0, addressFamily == AddressFamily.InterNetworkV6 ? 
@@ -60,7 +57,7 @@ namespace lab1
             IPEndPoint multicastEndPoint = new IPEndPoint(multicastIP, multicastPort);
             while (true)
             {
-                byte[] data = Encoding.UTF8.GetBytes(uniqString);
+                byte[] data = Encoding.UTF8.GetBytes("uniqString");
                 udpClient.Send(data, data.Length, multicastEndPoint);
 
                 Thread.Sleep(1000);
