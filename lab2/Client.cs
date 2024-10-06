@@ -50,18 +50,16 @@ namespace lab2
             int file_size = (int)fileInfo.Length;
             int count = 0;
 
-            StreamReader reader = new StreamReader(file);
-
-            char[] chars = new char[SIZE_DATA];
+            FileStream fileStream = new FileStream(file, FileMode.Open);
+            byte[] buffer = new byte[SIZE_DATA];
             while (file_size > 0) 
             {
-                count = reader.Read(chars, 0, SIZE_DATA);
-                byte[] data = Encoding.UTF8.GetBytes(chars);
-                stream.Write(data, 0, count);
+                count = fileStream.Read(buffer, 0, buffer.Length);
+                stream.Write(buffer, 0, count);
                 file_size -= count;
             }
             
-            reader.Close();
+            fileStream.Close();
             stream.Close();
             client.Close();
 

@@ -65,11 +65,11 @@ namespace lab2
                 Console.WriteLine(newFileName);
 
                 File.Create(newFileName).Close();
-                StreamWriter writer = new StreamWriter(newFileName);
                 int len = int.Parse(Encoding.UTF8.GetString(length));
                 int lenForCount = len;
 
                 //TimeManager manager = new TimeManager(3);
+                FileStream fileStream = new FileStream(newFileName, FileMode.Create, FileAccess.Write);
                 var sw = new Stopwatch();
                 int count = 0;
                 while (len > 0) 
@@ -77,15 +77,13 @@ namespace lab2
                     sw.Start();
                     count = stream.Read(data, 0, SIZE_DATA);
                     sw.Stop();
-
-                    char[] charData = Encoding.UTF8.GetChars(data, 0, count);
-                    writer.Write(charData, 0, count);
+                    fileStream.Write(data, 0, count);
                     len -= count;
                     //Console.WriteLine("why manager is stupid");
                     //manager.printInformation((((double)count) / (double)sw.Elapsed.Microseconds).ToString() + "MB/s");
                 }
 
-                writer.Close();
+                fileStream.Close();
                 stream.Close();
                 socket.Close();
             }
