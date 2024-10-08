@@ -4,13 +4,11 @@ using System.Text;
 
 namespace lab2 
 {
-    public class Client
+    public class Client : NetworkWorker
     {
         string host;
         int port;
         TcpClient client;
-        static int ACCEPT = 2;
-        static int SIZE_DATA = 4096;
         public Client (string host, int port)
         {
             this.host = host;

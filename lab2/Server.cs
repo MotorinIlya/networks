@@ -8,13 +8,11 @@ using System.Diagnostics;
 
 namespace lab2
 {
-    public class Server 
+    public class Server : NetworkWorker
     {
         IPEndPoint point;
         TcpListener listener;
         string directory;
-        static int SIZE_DATA = 4096;
-        static int ACCEPT = 2;
         public Server (int port)
         {
             point = new IPEndPoint(IPAddress.Any, port);
@@ -61,27 +59,39 @@ namespace lab2
                 string name = Encoding.UTF8.GetString(fileName).TrimEnd('\0').Trim();
                 FileCreator fileCreator = new FileCreator(directory, Path.GetFileName(name));
                 string newFileName = fileCreator.CreateName();
-                
-                Console.WriteLine(newFileName);
-
                 File.Create(newFileName).Close();
-                int len = int.Parse(Encoding.UTF8.GetString(length));
-                int lenForCount = len;
 
-                //TimeManager manager = new TimeManager(3);
+                long len = long.Parse(Encoding.UTF8.GetString(length));
+                long lenForCount = len;
+
+                TimeManager manager = new TimeManager(3, Path.GetFileName(newFileName));
                 FileStream fileStream = new FileStream(newFileName, FileMode.Create, FileAccess.Write);
+
                 var sw = new Stopwatch();
+                long freq = Stopwatch.Frequency;
                 int count = 0;
+                
+                long time = 0;
+
+                var watch = new Stopwatch();
+                watch.Start();
                 while (len > 0) 
                 {
-                    sw.Start();
+                    sw.Restart();
                     count = stream.Read(data, 0, SIZE_DATA);
                     sw.Stop();
                     fileStream.Write(data, 0, count);
                     len -= count;
-                    //Console.WriteLine("why manager is stupid");
-                    //manager.printInformation((((double)count) / (double)sw.Elapsed.Microseconds).ToString() + "MB/s");
+                    time += (long)sw.ElapsedTicks;
+
+                    long moment_speed = (long)((double)count * (double)freq / (double)sw.ElapsedTicks) / 1_000_000;
+
+                    manager.printInformation(moment_speed.ToString() + "MB/s");
                 }
+                watch.Stop();
+                manager.asyncPrintInformation("all time to send is " + ((double)time / (double)freq).ToString() + " seconds");
+                manager.asyncPrintInformation("all time is " + ((double)watch.ElapsedTicks / (double)freq).ToString() + " seconds");
+                manager.asyncPrintInformation("average speed is " + ((lenForCount * freq / time) / 1_000_000).ToString() + " MB/s");
 
                 fileStream.Close();
                 stream.Close();
