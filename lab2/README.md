@@ -15,7 +15,7 @@ git clone https://github.com/MotorinIlya/networks.git
 ```
 - if you want switch on server:
 ``` bash
-./bin/Release/net8.0/publish/lab2 server {port}
+./lab2 server {port}
 ```
 where 
 - {port} is the port on which the server will listen to clients
@@ -24,7 +24,7 @@ where
 
 - if you want switch on client
 ``` bash
-./bin/Release/net8.0/publish/lab2 client {path with filename} {ip server} {port server}
+./lab2 client {path with filename} {ip server} {port server}
 ```
 where 
 - {path with filename} is absolute path to file.
