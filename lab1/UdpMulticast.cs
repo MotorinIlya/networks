@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace lab1
+namespace UdpMulticastProgram
 {
     class UdpMulticast
     {
@@ -52,6 +52,7 @@ namespace lab1
                 Thread.Sleep(1000);
             }
         }
+
         void SendMessages()
         {
             IPEndPoint multicastEndPoint = new IPEndPoint(multicastIP, multicastPort);

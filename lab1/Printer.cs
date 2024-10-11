@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace lab1
+namespace UdpMulticastProgram
 {
     public class Printer
     {

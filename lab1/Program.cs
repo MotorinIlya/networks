@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System;
 
-namespace lab1
+namespace UdpMulticastProgram
 {
     class Program
     {
