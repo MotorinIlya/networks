@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace lab2
+namespace SendingFiles
 {
     class FileCreator
     {

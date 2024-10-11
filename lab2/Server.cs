@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading;
 using System.Diagnostics;
 
-namespace lab2
+namespace SendingFiles
 {
     public class Server : NetworkWorker
     {
@@ -91,7 +91,8 @@ namespace lab2
                 watch.Stop();
                 manager.asyncPrintInformation("all time to send is " + ((double)time / (double)freq).ToString() + " seconds");
                 manager.asyncPrintInformation("all time is " + ((double)watch.ElapsedTicks / (double)freq).ToString() + " seconds");
-                manager.asyncPrintInformation("average speed is " + ((lenForCount * freq / time) / 1_000_000).ToString() + " MB/s");
+                manager.asyncPrintInformation("average speed is " + 
+                                                (((double)lenForCount * freq / (double)time) / 1_000_000).ToString() + " MB/s");
 
                 fileStream.Close();
                 stream.Close();

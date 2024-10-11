@@ -1,6 +1,6 @@
 using System;
 
-namespace lab2
+namespace SendingFiles
 {
     class TimeManager
     {

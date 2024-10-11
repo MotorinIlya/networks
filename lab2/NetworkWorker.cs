@@ -1,6 +1,6 @@
 
 
-namespace lab2
+namespace SendingFiles
 {
     public class NetworkWorker
     {

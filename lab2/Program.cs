@@ -1,9 +1,6 @@
 ﻿using System;
 
-// показывать скорость сети раз в 3 секунды
-// подумать над кодировкой
-
-namespace lab2
+namespace SendingFiles
 {
     class Program
     {
