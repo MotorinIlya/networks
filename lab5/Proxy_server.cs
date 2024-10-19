@@ -64,7 +64,7 @@ namespace SOCKCSProxy
 
             try
             {
-                (destinationIP, destinationPort) = await AddressParser.parseAddress(buffer);
+                (destinationIP, destinationPort) = await AddressParser.ParseAddress(buffer);
             }
             catch (UnknownAddressException ex)
             {

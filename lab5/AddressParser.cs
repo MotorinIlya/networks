@@ -5,7 +5,7 @@ namespace SOCKCSProxy
 {
     public class AddressParser
     {
-        public async static Task<(IPAddress, int)> parseAddress(byte[] buffer)
+        public async static Task<(IPAddress, int)> ParseAddress(byte[] buffer)
         {
 
             IPAddress? destinationIP = null;
