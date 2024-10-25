@@ -41,7 +41,7 @@ namespace SOCKCSProxy
 
             Console.WriteLine("Begin protocol");
 
-            await stream.WriteAsync(new byte[] {(byte)Bytes.Version , (byte)Bytes.WithoutAuthentication}, 0, 2);
+            await Messages.SendWithoutAuthentication(stream);
 
             await stream.ReadAsync(buffer, 0, buffer.Length);
 
@@ -69,36 +69,14 @@ namespace SOCKCSProxy
             catch (UnknownAddressException ex)
             {
                 Console.WriteLine("Unknown address");
-                await stream.WriteAsync(new byte[] { 
-                    (byte)(Bytes.Version), 
-                    (byte)(Bytes.UnknownAddress), 
-                    (byte)(Bytes.Reserve), 
-                    (byte)(Bytes.IPV4), 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort }, 
-                    0, 10);
+                await Messages.SendMessage(stream, Bytes.UnknownAddress);
                 client.Close();
                 return;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"DNS resolution failed {ex.Message}");
-                await stream.WriteAsync(new byte[] { 
-                    (byte)Bytes.Version, 
-                    (byte)Bytes.UnavailableHost, 
-                    (byte)Bytes.Reserve, 
-                    (byte)Bytes.IPV4, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort }, 
-                    0, 10);
+                await Messages.SendMessage(stream, Bytes.UnavailableHost);
                 client.Close();
                 return;
             }
@@ -110,36 +88,16 @@ namespace SOCKCSProxy
                 TcpClient remoteClient = new TcpClient();
                 await remoteClient.ConnectAsync(destinationIP, destinationPort);
                 
-                await stream.WriteAsync(new byte[] { 
-                    (byte)Bytes.Version, 
-                    (byte)Bytes.Accept, 
-                    (byte)Bytes.Reserve, 
-                    (byte)Bytes.IPV4, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort }, 
-                    0, 10);
+                await Messages.SendMessage(stream, Bytes.Accept);
 
-                _ = Task.WhenAll(TransferStream(client.GetStream(), remoteClient.GetStream()), TransferStream(remoteClient.GetStream(), client.GetStream()));
+                _ = Task.WhenAll(
+                        TransferStream(client.GetStream(), remoteClient.GetStream()), 
+                        TransferStream(remoteClient.GetStream(), client.GetStream()));
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unknown address type");
-                await stream.WriteAsync(new byte[] { 
-                    (byte)Bytes.Version, 
-                    (byte)Bytes.UnknownAddress, 
-                    (byte)Bytes.Reserve, 
-                    (byte)Bytes.IPV4, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort, 
-                    (byte)Bytes.AddressPort }, 
-                    0, 10);
+                Messages.SendMessage(stream, Bytes.UnknownAddress);
                 client.Close();
                 return;
             }

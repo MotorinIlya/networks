@@ -14,43 +14,11 @@ namespace SOCKCSProxy
                 0, 2);
         }
 
-        public static async Task SendUnknownAddress(NetworkStream stream)
+        public static async Task SendMessage(NetworkStream stream, Bytes message)
         {
             stream.WriteAsync(new byte[] { 
                 (byte)Bytes.Version, 
-                (byte)Bytes.UnknownAddress, 
-                (byte)Bytes.Reserve, 
-                (byte)Bytes.IPV4, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort }, 
-                0, 10);
-        }
-
-        public static async Task SendDNSFailed(NetworkStream stream)
-        {
-            stream.WriteAsync(new byte[] { 
-                (byte)Bytes.Version, 
-                (byte)Bytes.UnavailableHost, 
-                (byte)Bytes.Reserve, 
-                (byte)Bytes.IPV4, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort, 
-                (byte)Bytes.AddressPort }, 
-                0, 10);
-        }
-
-        public static async Task SendAccept(NetworkStream stream)
-        {
-            stream.WriteAsync(new byte[] { 
-                (byte)Bytes.Version, 
-                (byte)Bytes.Accept, 
+                (byte)message, 
                 (byte)Bytes.Reserve, 
                 (byte)Bytes.IPV4, 
                 (byte)Bytes.AddressPort, 
