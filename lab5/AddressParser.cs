@@ -13,11 +13,11 @@ namespace SOCKCSProxy
 
             switch (buffer[3])
             {
-                case 0x01:
+                case (byte)Bytes.IPV4:
                     destinationIP = new IPAddress(new byte[] {buffer[4], buffer[5], buffer[6], buffer[7]} );
                     destinationPort = (int)buffer[8] << 8 | (int)buffer[9];
                     return  (destinationIP, destinationPort);
-                case 0x03:
+                case (byte)Bytes.Domen:
                     int domainLength = (int)buffer[4];
                     string domainName = Encoding.ASCII.GetString(buffer, 5, domainLength);
 

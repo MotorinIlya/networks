@@ -31,9 +31,9 @@ namespace SOCKCSProxy
             var stream = client.GetStream();
 
             byte[] buffer = new byte[1024];
-            int readBytes = await stream.ReadAsync(buffer, 0,buffer.Length);
+            int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
             
-            if (readBytes == 0 || buffer[0] != 0x05) 
+            if (readBytes == 0 || buffer[0] != (byte)Bytes.Version) 
             {
                 Console.WriteLine("It is not SOCKS5");
                 return;
@@ -41,17 +41,17 @@ namespace SOCKCSProxy
 
             Console.WriteLine("Begin protocol");
 
-            await stream.WriteAsync(new byte[] {0x05, 0x00}, 0, 2);
+            await stream.WriteAsync(new byte[] {(byte)Bytes.Version , (byte)Bytes.WithoutAuthentication}, 0, 2);
 
             await stream.ReadAsync(buffer, 0, buffer.Length);
 
-            if (readBytes == 0 || buffer[0] != 0x05)
+            if (readBytes == 0 || buffer[0] != (byte)Bytes.Version)
             {
                 Console.WriteLine("It is not SOCKS5");
                 return;
             }
 
-            if (buffer[1] != 0x01) 
+            if (buffer[1] != (byte)Bytes.Connect) 
             {
                 Console.WriteLine("Unknown or unrealized comand");
                 return;
@@ -69,16 +69,36 @@ namespace SOCKCSProxy
             catch (UnknownAddressException ex)
             {
                 Console.WriteLine("Unknown address");
-                await stream.WriteAsync(new byte[] 
-                                            { 0x05, 0x08, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 0, 10);
+                await stream.WriteAsync(new byte[] { 
+                    (byte)(Bytes.Version), 
+                    (byte)(Bytes.UnknownAddress), 
+                    (byte)(Bytes.Reserve), 
+                    (byte)(Bytes.IPV4), 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort }, 
+                    0, 10);
                 client.Close();
                 return;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"DNS resolution failed {ex.Message}");
-                await stream.WriteAsync(new byte[] 
-                                            { 0x05, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 0, 10);
+                await stream.WriteAsync(new byte[] { 
+                    (byte)Bytes.Version, 
+                    (byte)Bytes.UnavailableHost, 
+                    (byte)Bytes.Reserve, 
+                    (byte)Bytes.IPV4, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort }, 
+                    0, 10);
                 client.Close();
                 return;
             }
@@ -90,14 +110,36 @@ namespace SOCKCSProxy
                 TcpClient remoteClient = new TcpClient();
                 await remoteClient.ConnectAsync(destinationIP, destinationPort);
                 
-                await stream.WriteAsync(new byte[] { 0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 0, 10);
+                await stream.WriteAsync(new byte[] { 
+                    (byte)Bytes.Version, 
+                    (byte)Bytes.Accept, 
+                    (byte)Bytes.Reserve, 
+                    (byte)Bytes.IPV4, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort }, 
+                    0, 10);
 
                 _ = Task.WhenAll(TransferStream(client.GetStream(), remoteClient.GetStream()), TransferStream(remoteClient.GetStream(), client.GetStream()));
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unknown address type");
-                await stream.WriteAsync(new byte[] { 0x05, 0x08, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 0, 10);
+                await stream.WriteAsync(new byte[] { 
+                    (byte)Bytes.Version, 
+                    (byte)Bytes.UnknownAddress, 
+                    (byte)Bytes.Reserve, 
+                    (byte)Bytes.IPV4, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort, 
+                    (byte)Bytes.AddressPort }, 
+                    0, 10);
                 client.Close();
                 return;
             }
