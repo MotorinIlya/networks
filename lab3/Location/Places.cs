@@ -1,6 +1,6 @@
 
 
-namespace http
+namespace HttpPlaces
 {
     public class Places
     {

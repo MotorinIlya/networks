@@ -3,8 +3,11 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
 
-
-namespace http
+// поменять название
+// разбросать json на файлы
+// для каждого api сделать класс
+// сделать GUI
+namespace HttpPlaces
 {
 
     
