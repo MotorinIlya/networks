@@ -3,9 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
 
-// поменять название
 // разбросать json на файлы
-// для каждого api сделать класс
 // сделать GUI
 namespace HttpPlaces
 {
@@ -18,9 +16,9 @@ namespace HttpPlaces
         Console.WriteLine("Start program");
         var requestWorker = new RequestWorker();
 
-        string nameLocation = Console.ReadLine();
+        string? nameLocation = Console.ReadLine();
 
-        Places? places = await requestWorker.GetLocations(nameLocation);
+        PlacesJson? places = (PlacesJson) await requestWorker.GetLocations(nameLocation);
 
         int index = 0;
         foreach (var location in places.hits)
@@ -34,11 +32,11 @@ namespace HttpPlaces
 
         var place = places.hits[index];
         Console.WriteLine($"Place {place.name} {place.city}");
-        WeatherJson? weather = await requestWorker.GetWeather(place.point.lat, place.point.lng);
+        WeatherJson? weather = (WeatherJson)await requestWorker.GetWeather(place.point.lat, place.point.lng);
         Console.WriteLine($"Weather temp {weather.main.temp - 273.15}");
         Console.WriteLine($"Pressure is {weather.main.pressure * 0.75}");
 
-        InterestingPlacesJson? interestingPlaces = await requestWorker.GetInterestingPlaces(place.point.lat, place.point.lng);
+        InterestingPlacesJson? interestingPlaces = (InterestingPlacesJson) await requestWorker.GetInterestingPlaces(place.point.lat, place.point.lng);
         
         foreach (var interestingPlace in interestingPlaces.features)
         {
@@ -47,7 +45,7 @@ namespace HttpPlaces
             Console.WriteLine("- " + interestingPlace.properties.name);
           }
           else { continue; }
-          var message = await requestWorker.GetDescription(interestingPlace.properties.xid);
+          var message = (DescriptionJson) await requestWorker.GetDescription(interestingPlace.properties.xid);
           if (message.wikipedia_extracts is Wiki wiki && wiki.text is string text)
           {
             Console.WriteLine(text);
