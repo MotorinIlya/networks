@@ -4,9 +4,10 @@ namespace HttpPlaces;
 
 public class PlaceInfo
 {
-    public PlaceInfo(string name, string city, string country, double lat, double lng)
+    public PlaceInfo(string name, string city, string country, double lat, double lng, string kind)
     {
         Name = name;
+        Kind = kind;
         City = city;
         Country = country;
         Lat = lat;
@@ -34,7 +35,7 @@ public class PlaceInfo
     {
         Description[place] = description;
     }
-
+    public string? Kind { get; set; }
     public string? Name { get; set; }
     public string? City { get; set; }
     public string? Country { get; set; }

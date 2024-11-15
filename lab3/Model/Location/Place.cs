@@ -9,5 +9,5 @@ public class Place
     public string? city { get; set; }
     public string? postcode { get; set; }
     public Point? point { get; set; }
-
+    public string? osm_value { get; set; }
 }

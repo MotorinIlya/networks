@@ -8,14 +8,17 @@ namespace HttpPlaces;
 public class PlacesApi
 {
     RequestWorker worker;
+    String status;
     public PlacesApi()
     {
         worker = new RequestWorker();
+        status = "Ready to use";
     }
 
     public async Task<List<PlaceInfo>> GetPlaces(string name)
     {
         var places = new List<PlaceInfo>();
+        status = "Search information";
         var json = (PlacesJson) await worker.GetLocations(name);
         if (json.hits != null)
         {
@@ -28,7 +31,8 @@ public class PlacesApi
                         place.city, 
                         place.country, 
                         place.point.lat, 
-                        place.point.lng);
+                        place.point.lng,
+                        place.osm_value);
                     places.Add(placeInfo);
                 }
                 
@@ -74,7 +78,7 @@ public class PlacesApi
                 placeInfo.Description[placeInfo.InterestingPlaces[i]] = json.kinds;
             }
         }
-        
+        status = "Complete";
     }
 
 }

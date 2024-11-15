@@ -33,5 +33,11 @@
                 Grid.Column="1">
             </StackPanel>
         </Grid>
+
+        <StackPanel
+            Grid.Row="2"
+            Orientation="Horizontal"
+            x:Name="StatusPanel">
+        </StackPanel>
     </Grid>
 </Window>

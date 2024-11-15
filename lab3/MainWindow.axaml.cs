@@ -26,13 +26,13 @@ public partial class MainWindow : Window
     private async void CreateButtons(List<PlaceInfo> places)
     {
         ButtonsContainer.Children.Clear();
-        
+        CreateStatus("Search");
 
         foreach (var place in places)
         {
             var button = new Button
             {
-                Content = $"Place: {place.Name} Sity: {place.City}"
+                Content = $"Place: {place.Name} City: {place.City}"
             };
             await placeApi.GetWeather(place);
             await placeApi.GetInterestingPlaces(place);
@@ -43,7 +43,13 @@ public partial class MainWindow : Window
                 ReadContainer.Children.Clear();
                 ReadContainer.Children.Add(new TextBlock
                 {
-                    Text = "Place: " + place.Name
+                    Text = "Place: " + place.Name,
+                    FontSize = 20,
+                    FontWeight= Avalonia.Media.FontWeight.Bold
+                });
+                ReadContainer.Children.Add(new TextBlock
+                {
+                    Text = "Kind: " + place.Kind,
                 });
                 ReadContainer.Children.Add(new TextBlock
                 {
@@ -89,5 +95,16 @@ public partial class MainWindow : Window
             };
             ButtonsContainer.Children.Add(button);
         }
+
+        CreateStatus("Completed");
+    }
+
+    private void CreateStatus(string status)
+    {
+        StatusPanel.Children.Clear();
+        StatusPanel.Children.Add(new TextBlock
+        {
+            Text = status
+        });
     }
 }
