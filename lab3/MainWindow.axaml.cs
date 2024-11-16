@@ -47,34 +47,13 @@ public partial class MainWindow : Window
                     FontSize = 20,
                     FontWeight= Avalonia.Media.FontWeight.Bold
                 });
-                ReadContainer.Children.Add(new TextBlock
-                {
-                    Text = "Kind: " + place.Kind,
-                });
-                ReadContainer.Children.Add(new TextBlock
-                {
-                    Text = "City: " + place.City
-                });
-                ReadContainer.Children.Add(new TextBlock
-                {
-                    Text = "Country: " + place.Country
-                });
-                ReadContainer.Children.Add(new TextBlock
-                {
-                    Text = "Temperature: " + place.Temp
-                });
-                ReadContainer.Children.Add(new TextBlock
-                {
-                    Text = "Pressure: " + place.Pressure
-                });
-                ReadContainer.Children.Add(new TextBlock
-                {
-                    Text = "Humidity: " + place.Humidity
-                });
-                ReadContainer.Children.Add(new TextBlock
-                {
-                    Text = "Interesting places:"
-                });
+                AddTextBlock("Kind: " + place.Kind);
+                AddTextBlock("City: " + place.City);
+                AddTextBlock("Country: " + place.Country);
+                AddTextBlock("Temperature: " + place.Temp + "°");
+                AddTextBlock("Pressure: " + place.Pressure + "mm Hg");
+                AddTextBlock("Humidity: " + place.Humidity + "%");
+                AddTextBlock("Interesting places:");
                 foreach (var interestingPlace in place.InterestingPlaces)
                 {
                     if (place.Description.ContainsKey(interestingPlace))
@@ -105,6 +84,15 @@ public partial class MainWindow : Window
         StatusPanel.Children.Add(new TextBlock
         {
             Text = status
+        });
+    }
+
+    private void AddTextBlock(string text)
+    {
+        ReadContainer.Children.Add(new TextBlock
+        {
+            Text = text,
+            FontWeight = Avalonia.Media.FontWeight.Bold
         });
     }
 }
