@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+        x:Class="Snake.View.CreateFieldWindow"
+        Title="Snake"
+        Width="400"
+        Height="400">
+    <StackPanel Orientation="Vertical">
+        <StackPanel Width="200" 
+                    Orientation="Horizontal"
+                    Margin="20">
+            <TextBlock Text="Name"/>
+            <TextBox/>
+        </StackPanel>
+        <StackPanel Width="200" 
+                    Orientation="Horizontal"
+                    Margin="20">
+            <TextBlock Text="Width(10-100)"/>
+            <TextBox/>
+        </StackPanel>
+        <StackPanel Width="200" 
+                    Orientation="Horizontal"
+                    Margin="20">
+            <TextBlock Text="Height(10-100)"/>
+            <TextBox/>
+        </StackPanel>
+        <Button Click="ClickCreate">Start</Button>
+    </StackPanel>
+</Window>
