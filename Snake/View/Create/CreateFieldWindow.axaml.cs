@@ -2,7 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
-namespace Snake.View;
+namespace Snake.View.Create;
 
 public partial class CreateFieldWindow : Window
 {

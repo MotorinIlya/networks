@@ -1,26 +1,26 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 
-namespace Snake.View
+namespace Snake.View.Game;
 
-public class GameWindow : Window
+public partial class GameWindow : Window
 {
-    private GameBoard _gameBoard;
+    //private GameBoard _gameBoard;
 
-    public MainWindow()
+    public GameWindow()
     {
         Width = 800;
         Height = 600;
         Title = "Snake";
 
-        _gameBoard = new GameBoard();
-        Content = _gameBoard;
+        // _gameBoard = new GameBoard();
+        // Content = _gameBoard;
 
-        KeyDown += OnKeyDown;
+        // KeyDown += OnKeyDown;
     }
 
-    private void OnKeyDown(object? sender, KeyEventArgs e)
-    {
-        _gameBoard.HandleInput(e.Key);
-    }
+    // private void OnKeyDown(object? sender, KeyEventArgs e)
+    // {
+    //     _gameBoard.HandleInput(e.Key);
+    // }
 }

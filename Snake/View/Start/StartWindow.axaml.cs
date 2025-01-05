@@ -1,11 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
-namespace Snake.View;
+using Snake.View.Create;
 
-public partial class MainWindow : Window
+namespace Snake.View.Start;
+
+public partial class StartWindow : Window
 {
-    public MainWindow()
+    public StartWindow()
     {
         InitializeComponent();
     }
