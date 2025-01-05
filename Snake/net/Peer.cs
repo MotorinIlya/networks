@@ -9,11 +9,15 @@ namespace Snake.Net;
 
 public class Peer
 {
+    private NodeRole nodeRole;
+    
     private Dictionary<IPEndPoint, DateTime> activeCopies;
 
     private MulticastSocket multicastSocket;
 
     private UdpClient socket;
+
+    private string? name;
 
     public Peer()
     {
@@ -21,8 +25,6 @@ public class Peer
         multicastSocket = new();
         socket = new UdpClient(0);
     }
-
-
 
     public void SearchMulticastCopies (Dictionary<IPEndPoint, DateTime> activeCopies)
     {
