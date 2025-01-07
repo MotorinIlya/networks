@@ -1,6 +1,7 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Snake.View.Game;
 
 namespace Snake.View.Create;
 
@@ -13,7 +14,9 @@ public partial class CreateFieldWindow : Window
 
     public void ClickCreate(object sender, RoutedEventArgs args)
     {
-        Console.WriteLine("ehlff");
+        var gameWindow = new GameWindow(Name.Text, int.Parse(Width.Text), int.Parse(Height.Text));
+        gameWindow.Show();
+        Close();
     }
 
 }

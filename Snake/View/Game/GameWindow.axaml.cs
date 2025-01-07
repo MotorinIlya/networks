@@ -5,22 +5,23 @@ namespace Snake.View.Game;
 
 public partial class GameWindow : Window
 {
-    //private GameBoard _gameBoard;
+    private GameBoard _gameBoard;
 
-    public GameWindow()
+    public GameWindow(string name, int width, int height)
     {
-        Width = 800;
-        Height = 600;
+        CanResize = false;
+        Width = width * ViewConst.BlockSize;
+        Height = height * ViewConst.BlockSize;
         Title = "Snake";
 
-        // _gameBoard = new GameBoard();
-        // Content = _gameBoard;
+        _gameBoard = new GameBoard(name, width, height);
+        Content = _gameBoard;
 
-        // KeyDown += OnKeyDown;
+        KeyDown += OnKeyDown;
     }
 
-    // private void OnKeyDown(object? sender, KeyEventArgs e)
-    // {
-    //     _gameBoard.HandleInput(e.Key);
-    // }
+    private void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+       // _gameBoard.HandleInput(e.Key);
+    }
 }

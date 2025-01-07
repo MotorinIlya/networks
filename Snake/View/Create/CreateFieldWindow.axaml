@@ -12,19 +12,19 @@
                     Orientation="Horizontal"
                     Margin="20">
             <TextBlock Text="Name"/>
-            <TextBox/>
+            <TextBox x:Name="Name"/>
         </StackPanel>
         <StackPanel Width="200" 
                     Orientation="Horizontal"
                     Margin="20">
             <TextBlock Text="Width(10-100)"/>
-            <TextBox/>
+            <TextBox x:Name="Width"/>
         </StackPanel>
         <StackPanel Width="200" 
                     Orientation="Horizontal"
                     Margin="20">
             <TextBlock Text="Height(10-100)"/>
-            <TextBox/>
+            <TextBox x:Name="Height"/>
         </StackPanel>
         <Button Click="ClickCreate">Start</Button>
     </StackPanel>
