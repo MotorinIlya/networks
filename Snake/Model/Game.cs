@@ -11,7 +11,12 @@ public class Game
 
     public Game(string name, Map map)
     {
-        _gameController = new GameController(name, map);
         _peer = new Peer();
+        _gameController = new GameController(name, map, _peer.IpEndPoint);
+    }
+
+    public void Start()
+    {
+        _peer.Start();
     }
 }

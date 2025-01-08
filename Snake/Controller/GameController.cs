@@ -1,3 +1,4 @@
+using System.Net;
 using Snake.Model;
 
 namespace Snake.Controller;
@@ -6,8 +7,8 @@ public class GameController
 {
     private GameModel _gameModel;
 
-    public GameController(string name, Map map)
+    public GameController(string name, Map map, IPEndPoint endPoint)
     {
-        _gameModel = new GameModel(name, map);
+        _gameModel = new GameModel(name, map, endPoint);
     }
 }
