@@ -20,4 +20,7 @@ public class MulticastSocket : UdpClient
     public static IPAddress MulticastIP => _multicastIP;
 
     public static int MulticastPort => _multicastPort;
+
+
+    
 }
