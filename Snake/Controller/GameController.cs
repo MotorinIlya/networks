@@ -1,5 +1,5 @@
-using System.Net;
 using Snake.Model;
+using Snake.Net;
 
 namespace Snake.Controller;
 
@@ -7,8 +7,21 @@ public class GameController
 {
     private GameModel _gameModel;
 
-    public GameController(string name, Map map, IPEndPoint endPoint)
+    private Peer _peer;
+
+    public GameController(string name, Map map)
     {
-        _gameModel = new GameModel(name, map, endPoint);
+        _peer = new Peer();
+        _gameModel = new GameModel(name, map, _peer.IpEndPoint);
+    }
+
+    public void Start()
+    {
+        _peer.SendMsg(_gameModel);
+    }
+
+    public void Join()
+    {
+        _peer.SearchMulticastCopies();
     }
 }

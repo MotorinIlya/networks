@@ -3,16 +3,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
-        x:Class="Snake.View.Start.StartWindow"
+        x:Class="Snake.View.Join.JoinWindow"
         Title="Snake"
         Width="400"
         Height="200">
-    <StackPanel Width="200" 
-                Orientation="Vertical"
-                Margin="20">
-        <TextBlock Text="Snake"/>
-        <Button Click="ClickCreateGame">CreateGame</Button>
-        <Button Click="ClickJoinGame">JoinGame</Button>
-        <Button Click="ClickExit">Exit</Button>
-    </StackPanel>
+    <Grid>
+        <TextBlock Text="Games"/>
+        <StackPanel Width="200" 
+                    Orientation="Vertical"
+                    Margin="20"
+                    x:Name="games"/>
+    </Grid>
 </Window>

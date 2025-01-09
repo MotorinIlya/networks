@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
+using Google.Protobuf;
+using Snake.Model;
 
 namespace Snake.Net;
 
@@ -10,6 +13,8 @@ namespace Snake.Net;
 public class Peer
 {
     private Dictionary<IPEndPoint, DateTime> _activeCopies;
+
+    private Dictionary<IPEndPoint, GameMessage> _games;
 
     private Queue<GameMessage> _mulMessages;
 
@@ -21,25 +26,25 @@ public class Peer
 
     private int _unicastPort;
 
+    private IPAddress _unicastAddress;
+
     private NodeRole _nodeRole;
 
     public Peer()
     {
         _activeCopies = [];
         _multicastSocket = new();
+        _multicastSocket.Bind();
         _unicastSocket = new(NetConst.UnicastPort);
         _unicastPort = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Port;
+        _unicastAddress = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Address;
         _mulMessages = new();
         _messages = new();
+        _games = [];
     }
 
-    public void Start()
-    {
-        _nodeRole = NodeRole.Master;
-        _multicastSocket.Bind();
-    }
 
-    public void SearchMulticastCopies(Dictionary<IPEndPoint, DateTime> activeCopies)
+    public void SearchMulticastCopies()
     {
         Thread receiveThread = new Thread(SearchCopies);
         receiveThread.Start();
@@ -48,17 +53,28 @@ public class Peer
         deleteThread.Start();
     }
 
+    public void SendMsg(GameModel model)
+    {
+        Thread announceMsgThread = new Thread(() => SendAnnounceMsg(model));
+        announceMsgThread.Start();
+    }
+
     private void SearchCopies()
     {
         IPEndPoint? remoteEndPoint = null;
 
         while (true)
         {
-            _multicastSocket.Receive(ref remoteEndPoint);
+            var buffer = _multicastSocket.Receive(ref remoteEndPoint);
+            var message = GameMessage.Parser.ParseFrom(buffer);
 
             lock (_activeCopies)
             {
                 _activeCopies[remoteEndPoint] = DateTime.Now;
+            }
+            lock (_games)
+            {
+                _games[remoteEndPoint] = message;
             }
         }
     }
@@ -81,16 +97,20 @@ public class Peer
         }
     }
 
-    private void SendAnnounceMsg()
+    public void SendAnnounceMsg(GameModel model)
     {
         var endPoint = new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort);
         while (true)
         {
-
+            var message = CreatorMessages.createAnnouncementMsg(model);
+            var buffer = message.ToByteArray();
+            _unicastSocket.Send(buffer, buffer.Length, endPoint);
         }
     }
 
     public int UnicastPort => _unicastPort;
 
-    public IPEndPoint IpEndPoint => new IPEndPoint(IPAddress.Parse(NetConst.MyIp), _unicastPort);
+    public IPEndPoint IpEndPoint => new IPEndPoint(_unicastAddress, _unicastPort);
+
+    public Dictionary<IPEndPoint, GameMessage> Games => _games;
 }

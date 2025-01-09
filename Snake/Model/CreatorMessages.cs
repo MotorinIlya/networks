@@ -16,7 +16,7 @@ public static class CreatorMessages
         return msg;
     }
 
-    public static GameAnnouncement createGameAnnouncement(GameModel model)
+    private static GameAnnouncement createGameAnnouncement(GameModel model)
     {
         var gamePlayers = model.Players;
         return new GameAnnouncement()
