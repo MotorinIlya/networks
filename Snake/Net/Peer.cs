@@ -105,6 +105,7 @@ public class Peer
             var message = CreatorMessages.createAnnouncementMsg(model);
             var buffer = message.ToByteArray();
             _unicastSocket.Send(buffer, buffer.Length, endPoint);
+            //Thread.Sleep(1000);
         }
     }
 
