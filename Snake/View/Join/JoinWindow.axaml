@@ -9,6 +9,11 @@
         Height="200">
     <Grid>
         <TextBlock Text="Games"/>
+        <StackPanel Orientation="Horizontal"
+                    Margin="20">
+            <TextBlock Text="Name"/>
+            <TextBox x:Name="PlayerName"/>
+        <StackPanel/>
         <StackPanel Width="200" 
                     Orientation="Vertical"
                     Margin="20"

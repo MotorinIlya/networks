@@ -18,7 +18,7 @@ public class Peer
 
     private Queue<GameMessage> _mulMessages;
 
-    private Queue<GameMessage> _messages;
+    private ConcurrentQueue<(GameMessage, IPEndPoint)> _messages;
 
     private MulticastSocket _multicastSocket;
 
@@ -102,11 +102,38 @@ public class Peer
         var endPoint = new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort);
         while (true)
         {
-            var message = CreatorMessages.createAnnouncementMsg(model);
+            var message = CreatorMessages.CreateAnnouncementMsg(model);
             var buffer = message.ToByteArray();
-            _unicastSocket.Send(buffer, buffer.Length, endPoint);
+            lock(_unicastSocket)
+            {
+                _unicastSocket.Send(buffer, buffer.Length, endPoint);
+            }
             //Thread.Sleep(1000);
         }
+    }
+
+    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => _messages.Enqueue((msg, remoteEndPoint));
+
+    public void SendMsg()
+    {
+        while (true)
+        {
+            if (_messages.TryDequeue(out var message))
+            {
+                var msg = message.Item1;
+                var remoteEndPoint = message.Item2;
+                var buffer = msg.ToByteArray();
+                _unicastSocket.Send(buffer, buffer.Length, remoteEndPoint);
+            }
+            else
+            {
+                Thread.Sleep(50);
+            }
+        }
+    }
+
+    public void ReceiveMsg()
+    {
     }
 
     public int UnicastPort => _unicastPort;
