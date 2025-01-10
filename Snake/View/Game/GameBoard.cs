@@ -3,17 +3,25 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Snake.Model;
+using Snake.Net;
 
 namespace Snake.View.Game;
 
 public class GameBoard : UserControl
 {
     private Map _map;
-    public GameBoard(string name, int width, int height)
+    public GameBoard(string name, string gameName, int width, int height)
     {
         Focusable = true;
         _map = new Map(width, height);
-        _ = new Model.Game(name, _map);
+        _ = new Model.Game(name, gameName, _map);
+    }
+
+    public GameBoard(string playerName, string gameName, GameAnnouncement config, Peer peer)
+    {
+        Focusable = true;
+        _map = new Map(config.Config.Width, config.Config.Height);
+        _ = new Model.Game(playerName, gameName, config, peer, _map);
     }
 
     public void HandleInput(KeyEventArgs e){}

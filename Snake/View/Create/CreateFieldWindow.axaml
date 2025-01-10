@@ -17,6 +17,12 @@
         <StackPanel Width="200" 
                     Orientation="Horizontal"
                     Margin="20">
+            <TextBlock Text="GameName"/>
+            <TextBox x:Name="GameName"/>
+        </StackPanel>
+        <StackPanel Width="200" 
+                    Orientation="Horizontal"
+                    Margin="20">
             <TextBlock Text="Width(10-100)"/>
             <TextBox x:Name="Width"/>
         </StackPanel>

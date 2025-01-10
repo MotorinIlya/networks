@@ -4,16 +4,12 @@ namespace Snake.Model;
 
 public static class CreatorMessages
 {
-    public static GameMessage CreateAnnouncementMsg(GameModel model)
+    public static GameMessage CreateAckMsg()
     {
-        var annMsg = new GameMessage.Types.AnnouncementMsg();
-        annMsg.Games.Add(createGameAnnouncement(model));
-
-        var msg = new GameMessage()
+        return new GameMessage()
         {
-            Announcement = annMsg
+            Ack = new GameMessage.Types.AckMsg()
         };
-        return msg;
     }
 
     public static GameMessage CreateJoinMsg(string player_name, string game_name)
@@ -38,6 +34,18 @@ public static class CreatorMessages
         {
             Ack = ackMsg,
             ReceiverId = receiverId
+        };
+        return msg;
+    }
+
+        public static GameMessage CreateAnnouncementMsg(GameModel model)
+    {
+        var annMsg = new GameMessage.Types.AnnouncementMsg();
+        annMsg.Games.Add(createGameAnnouncement(model));
+
+        var msg = new GameMessage()
+        {
+            Announcement = annMsg
         };
         return msg;
     }

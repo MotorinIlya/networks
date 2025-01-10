@@ -7,7 +7,7 @@ using Snake.Service.Event;
 
 namespace Snake.Model;
 
-public class GameModel : Observer
+public class GameModel
 {
     private GamePlayers _gamePlayers;
 
@@ -19,13 +19,14 @@ public class GameModel : Observer
 
     private int _playerId = 1;
 
-    private string _main_name;
-    public GameModel(string name, Map map, IPEndPoint endPoint)
+    private string _playerName;
+    public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint)
     {
         _map = map;
-        _main_name = name;
+        _playerName = playerName;
+        _gameName = gameName;
         _gamePlayers = new GamePlayers();
-        _gamePlayers.Players.Add(CreatePlayer(_main_name, endPoint.Address.ToString(), endPoint.Port, NodeRole.Master, 0));
+        _gamePlayers.Players.Add(CreatePlayer(_playerName, endPoint.Address.ToString(), endPoint.Port, NodeRole.Master, 0));
         _gameConfig = new GameConfig()
         {
             Width = _map.Width,
@@ -33,7 +34,16 @@ public class GameModel : Observer
         };
     }
 
-    public GamePlayer CreatePlayer(string name, string ipAddress, int port, NodeRole role, int score)
+    public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
+    {
+        _map = map;
+        _playerName = playerName;
+        _gameName = gameName;
+        _gamePlayers = config.Players;
+        _gameConfig = config.Config;
+    }
+
+    private GamePlayer CreatePlayer(string name, string ipAddress, int port, NodeRole role, int score)
     {
         var player = new GamePlayer()
         {
@@ -48,13 +58,8 @@ public class GameModel : Observer
         return player;
     }
 
-    public override void Update(GameEvent gameEvent)
-    {
-        
-    }
-
     public GamePlayers Players => _gamePlayers;
     public GameConfig Config => _gameConfig;
-    public string MainName => _main_name;
+    public string MainName => _playerName;
     public string GameName => _gameName;
 }

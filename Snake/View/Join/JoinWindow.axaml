@@ -7,7 +7,7 @@
         Title="Snake"
         Width="400"
         Height="200">
-    <Grid>
+    <StackPanel Orientation="Vertical">
         <TextBlock Text="Games"/>
         <StackPanel Orientation="Horizontal"
                     Margin="20">
@@ -18,5 +18,5 @@
                     Orientation="Vertical"
                     Margin="20"
                     x:Name="games"/>
-    </Grid>
+    </StackPanel>
 </Window>

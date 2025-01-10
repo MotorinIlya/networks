@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Snake.Model;
 using Snake.Net;
+using Snake.View.Game;
 
 namespace Snake.View.Join;
 
@@ -34,8 +35,12 @@ public partial class JoinWindow : Window
                 Content = gameName
             };
             button.Click += (sender, e) => {
-                var joinMsg = CreatorMessages.CreateJoinMsg(PlayerName.Text, gameName);
+                var playerName = PlayerName.Text;
+                var joinMsg = CreatorMessages.CreateJoinMsg(playerName, gameName);
                 _peer.AddMsg(joinMsg, endPoint);
+                var gameWindow = new GameWindow(playerName, gameName, gameMsg.Announcement.Games[0], _peer);
+                gameWindow.Show();
+                Close();
             };
             games.Children.Add(button);
         }

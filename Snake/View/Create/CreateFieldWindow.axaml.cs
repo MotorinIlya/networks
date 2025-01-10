@@ -14,7 +14,7 @@ public partial class CreateFieldWindow : Window
 
     public void ClickCreate(object sender, RoutedEventArgs args)
     {
-        var gameWindow = new GameWindow(Name.Text, int.Parse(Width.Text), int.Parse(Height.Text));
+        var gameWindow = new GameWindow(Name.Text, GameName.Text, int.Parse(Width.Text), int.Parse(Height.Text));
         gameWindow.Show();
         Close();
     }

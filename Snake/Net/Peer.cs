@@ -43,8 +43,12 @@ public class Peer : Observable
         _mulMessages = new();
         _sendMessages = new();
         _games = [];
+
         var sendThread = new Thread(SendMsg);
         sendThread.Start();
+
+        var receiveThread = new Thread(ReceiveMsg);
+        receiveThread.Start();
     }
 
 
@@ -122,7 +126,7 @@ public class Peer : Observable
         {
             var buffer = _unicastSocket.Receive(ref remoteEndPoint);
             var message = GameMessage.Parser.ParseFrom(buffer);
-            Update(new GameEvent(message));
+            Update(new GameEvent(message, remoteEndPoint));
         }
     }
 
