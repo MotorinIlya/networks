@@ -13,4 +13,6 @@ public static class NetConst
     public static TimeSpan ExpirationTime = TimeSpan.FromSeconds(0.8);
 
     public const string MyIp = "127.0.0.1";
+
+    public const int StartDelay = 1000;
 }

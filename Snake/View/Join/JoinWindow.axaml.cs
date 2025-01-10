@@ -1,3 +1,4 @@
+using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -15,6 +16,8 @@ public partial class JoinWindow : Window
         InitializeComponent();
         _peer = new Peer();
         _peer.SearchMulticastCopies();
+        Thread.Sleep(NetConst.StartDelay);
+        AddGames();
     }
 
     public void AddGames()
@@ -31,8 +34,8 @@ public partial class JoinWindow : Window
                 Content = gameName
             };
             button.Click += (sender, e) => {
-                var joinMsg = CreatorMessages.CreateJoinMsg(PlayerName, gameName);
-                _peer.SendMsg(joinMsg, endPoint);
+                var joinMsg = CreatorMessages.CreateJoinMsg(PlayerName.Text, gameName);
+                _peer.AddMsg(joinMsg, endPoint);
             };
             games.Children.Add(button);
         }

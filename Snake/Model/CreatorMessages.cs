@@ -38,7 +38,6 @@ public static class CreatorMessages
         {
             Ack = ackMsg,
             ReceiverId = receiverId
-            
         };
         return msg;
     }

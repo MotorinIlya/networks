@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using Snake.Net;
+using Snake.Service;
+using Snake.Service.Event;
 
 namespace Snake.Model;
 
-public class GameModel
+public class GameModel : Observer
 {
     private GamePlayers _gamePlayers;
 
@@ -44,6 +46,11 @@ public class GameModel
         };
         _playerId++;
         return player;
+    }
+
+    public override void Update(GameEvent gameEvent)
+    {
+        
     }
 
     public GamePlayers Players => _gamePlayers;

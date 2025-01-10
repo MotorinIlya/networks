@@ -1,16 +1,18 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using Google.Protobuf;
 using Snake.Model;
+using Snake.Service;
+using Snake.Service.Event;
 
 namespace Snake.Net;
 
 
-public class Peer
+public class Peer : Observable
 {
     private Dictionary<IPEndPoint, DateTime> _activeCopies;
 
@@ -18,7 +20,7 @@ public class Peer
 
     private Queue<GameMessage> _mulMessages;
 
-    private ConcurrentQueue<(GameMessage, IPEndPoint)> _messages;
+    private ConcurrentQueue<(GameMessage, IPEndPoint)> _sendMessages;
 
     private MulticastSocket _multicastSocket;
 
@@ -39,8 +41,10 @@ public class Peer
         _unicastPort = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Port;
         _unicastAddress = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Address;
         _mulMessages = new();
-        _messages = new();
+        _sendMessages = new();
         _games = [];
+        var sendThread = new Thread(SendMsg);
+        sendThread.Start();
     }
 
 
@@ -51,12 +55,6 @@ public class Peer
 
         Thread deleteThread = new Thread(DeleteDeactiveCopies);
         deleteThread.Start();
-    }
-
-    public void SendMsg(GameModel model)
-    {
-        Thread announceMsgThread = new Thread(() => SendAnnounceMsg(model));
-        announceMsgThread.Start();
     }
 
     private void SearchCopies()
@@ -97,28 +95,13 @@ public class Peer
         }
     }
 
-    public void SendAnnounceMsg(GameModel model)
-    {
-        var endPoint = new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort);
-        while (true)
-        {
-            var message = CreatorMessages.CreateAnnouncementMsg(model);
-            var buffer = message.ToByteArray();
-            lock(_unicastSocket)
-            {
-                _unicastSocket.Send(buffer, buffer.Length, endPoint);
-            }
-            //Thread.Sleep(1000);
-        }
-    }
-
-    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => _messages.Enqueue((msg, remoteEndPoint));
+    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => _sendMessages.Enqueue((msg, remoteEndPoint));
 
     public void SendMsg()
     {
         while (true)
         {
-            if (_messages.TryDequeue(out var message))
+            if (_sendMessages.TryDequeue(out var message))
             {
                 var msg = message.Item1;
                 var remoteEndPoint = message.Item2;
@@ -134,6 +117,13 @@ public class Peer
 
     public void ReceiveMsg()
     {
+        IPEndPoint? remoteEndPoint = null;
+        while (true)
+        {
+            var buffer = _unicastSocket.Receive(ref remoteEndPoint);
+            var message = GameMessage.Parser.ParseFrom(buffer);
+            Update(new GameEvent(message));
+        }
     }
 
     public int UnicastPort => _unicastPort;
