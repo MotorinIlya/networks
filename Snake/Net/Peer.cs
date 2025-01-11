@@ -14,11 +14,9 @@ namespace Snake.Net;
 
 public class Peer : Observable
 {
-    private Dictionary<IPEndPoint, DateTime> _activeCopies;
+    //private Dictionary<IPEndPoint, DateTime> _activeCopies;
 
     private Dictionary<IPEndPoint, GameMessage> _games;
-
-    private Queue<GameMessage> _mulMessages;
 
     private ConcurrentQueue<(GameMessage, IPEndPoint)> _sendMessages;
 
@@ -34,13 +32,12 @@ public class Peer : Observable
 
     public Peer()
     {
-        _activeCopies = [];
+        //_activeCopies = [];
         _multicastSocket = new();
         _multicastSocket.Bind();
         _unicastSocket = new(NetConst.UnicastPort);
         _unicastPort = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Port;
         _unicastAddress = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Address;
-        _mulMessages = new();
         _sendMessages = new();
         _games = [];
 
@@ -57,8 +54,8 @@ public class Peer : Observable
         Thread receiveThread = new Thread(SearchCopies);
         receiveThread.Start();
 
-        Thread deleteThread = new Thread(DeleteDeactiveCopies);
-        deleteThread.Start();
+        // Thread deleteThread = new Thread(DeleteDeactiveCopies);
+        // deleteThread.Start();
     }
 
     private void SearchCopies()
@@ -70,10 +67,10 @@ public class Peer : Observable
             var buffer = _multicastSocket.Receive(ref remoteEndPoint);
             var message = GameMessage.Parser.ParseFrom(buffer);
 
-            lock (_activeCopies)
-            {
-                _activeCopies[remoteEndPoint] = DateTime.Now;
-            }
+            // lock (_activeCopies)
+            // {
+            //     _activeCopies[remoteEndPoint] = DateTime.Now;
+            // }
             lock (_games)
             {
                 _games[remoteEndPoint] = message;
@@ -81,23 +78,23 @@ public class Peer : Observable
         }
     }
 
-    private void DeleteDeactiveCopies()
-    {
-        while (true)
-        {
-            var dateTime = DateTime.Now;
-            lock (_activeCopies)
-            {
-                foreach (var copy in _activeCopies)
-                {
-                    if (dateTime - copy.Value > NetConst.ExpirationTime)
-                    {
-                        _activeCopies.Remove(copy.Key);
-                    }
-                }
-            }
-        }
-    }
+    // private void DeleteDeactiveCopies()
+    // {
+    //     while (true)
+    //     {
+    //         var dateTime = DateTime.Now;
+    //         lock (_activeCopies)
+    //         {
+    //             foreach (var copy in _activeCopies)
+    //             {
+    //                 if (dateTime - copy.Value > NetConst.ExpirationTime)
+    //                 {
+    //                     _activeCopies.Remove(copy.Key);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => _sendMessages.Enqueue((msg, remoteEndPoint));
 

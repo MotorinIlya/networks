@@ -20,18 +20,24 @@ public class GameModel
     private int _playerId = 1;
 
     private string _playerName;
+
+    private GameState? _state;
+
+    private int _lastOrderState = 0;
     public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint)
     {
         _map = map;
         _playerName = playerName;
         _gameName = gameName;
         _gamePlayers = new GamePlayers();
-        _gamePlayers.Players.Add(CreatePlayer(_playerName, endPoint.Address.ToString(), endPoint.Port, NodeRole.Master, 0));
+        _gamePlayers.Players.Add(CreatePlayer(_playerName, endPoint.Address.ToString(), endPoint.Port, NodeRole.Master));
         _gameConfig = new GameConfig()
         {
             Width = _map.Width,
             Height = _map.Height,
         };
+        _state = new GameState();
+        
     }
 
     public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
@@ -43,7 +49,7 @@ public class GameModel
         _gameConfig = config.Config;
     }
 
-    private GamePlayer CreatePlayer(string name, string ipAddress, int port, NodeRole role, int score)
+    private GamePlayer CreatePlayer(string name, string ipAddress, int port, NodeRole role)
     {
         var player = new GamePlayer()
         {
@@ -52,14 +58,42 @@ public class GameModel
             IpAddress = ipAddress,
             Port = port,
             Role = role,
-            Score = score
+            Score = 0
         };
         _playerId++;
         return player;
     }
 
+    public int AddPlayer(string name, IPEndPoint endPoint, NodeRole role, GameState.Types.Coord head)
+    {
+        var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, role);
+        _gamePlayers.Players.Add(player);
+        var snake = new GameState.Types.Snake
+        {
+            PlayerId = player.Id,
+            State = GameState.Types.Snake.Types.SnakeState.Alive,
+            HeadDirection = Direction.Right
+        };
+        snake.Points.Add(head);
+        snake.Points.Add(MConst.Left);
+
+        return player.Id;
+    }
+
+    public void UpdateMap(GameState state)
+    {
+        if (state.StateOrder > _lastOrderState)
+        {
+            _lastOrderState = state.StateOrder;
+            _state = state;
+            _map.Update(state);
+        }
+    }
+
+    public GameState GetState() => _state;
     public GamePlayers Players => _gamePlayers;
     public GameConfig Config => _gameConfig;
     public string MainName => _playerName;
     public string GameName => _gameName;
+    public Map GameMap => _map;
 }

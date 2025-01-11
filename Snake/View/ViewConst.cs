@@ -14,4 +14,6 @@ public static class ViewConst
         {GameObjects.SnakeBody, Brushes.Blue},
         {GameObjects.Apple, Brushes.Red}
     };
+
+    public const string ErrorMsg = "The game is full";
 }

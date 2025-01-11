@@ -10,7 +10,7 @@ public class Game
     public Game(string name, string gameName, Map map)
     {
         _gameController = new GameController(name, gameName, map);
-        _gameController.Start();
+        _gameController.SearchPlayers();
     }
 
     public Game(string playerName, string gameName, GameAnnouncement config, Peer peer, Map map)

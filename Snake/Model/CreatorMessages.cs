@@ -4,14 +4,34 @@ namespace Snake.Model;
 
 public static class CreatorMessages
 {
-    public static GameMessage CreateAckMsg()
-    {
-        return new GameMessage()
-        {
-            Ack = new GameMessage.Types.AckMsg()
-        };
-    }
 
+    public static GameMessage CreateStateMsg(GameModel model)
+    {
+        var gameState = model.GetState();
+        var stateMsg = new GameMessage.Types.StateMsg
+        {
+            State = gameState
+        };
+        var msg = new GameMessage()
+        {
+            State = stateMsg
+        };
+        return msg;
+    }
+    
+    public static GameMessage CreateErrorMsg(string error)
+    {
+        var errorMsg = new GameMessage.Types.ErrorMsg
+        {
+            ErrorMessage = error
+        };
+        var msg = new GameMessage()
+        {
+            Error = errorMsg
+        };
+        return msg;
+    }
+    
     public static GameMessage CreateJoinMsg(string player_name, string game_name)
     {
         var joinMsg = new GameMessage.Types.JoinMsg

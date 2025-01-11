@@ -4,6 +4,8 @@ using Snake.Model;
 using Snake.Net;
 using Snake.Service;
 using Snake.Service.Event;
+using Snake.Utils;
+using Snake.View;
 
 namespace Snake.Controller;
 
@@ -26,9 +28,9 @@ public class GameController : Observer
         _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config);
     }
 
-    public void Start()
+    public void SearchPlayers()
     {
-        var createMsgThread = new Thread(periodicCreateAnnMsg);
+        var createMsgThread = new Thread(PeriodicCreateMsg);
         createMsgThread.Start();
     }
 
@@ -37,12 +39,19 @@ public class GameController : Observer
         _peer.SearchMulticastCopies();
     }
 
-    private void periodicCreateAnnMsg()
+    private void PeriodicCreateMsg()
     {
         while (true)
         {
             var msg = CreatorMessages.CreateAnnouncementMsg(_gameModel);
             _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort));
+
+            msg = CreatorMessages.CreateStateMsg(_gameModel);
+            foreach (var player in _gameModel.Players.Players)
+            {
+                _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
+            }
+            
             Thread.Sleep(NetConst.StartDelay);
         }
     }
@@ -56,9 +65,20 @@ public class GameController : Observer
             case GameMessage.TypeOneofCase.Announcement:
                 break;
             case GameMessage.TypeOneofCase.Join:
-                _peer.AddMsg(CreatorMessages.CreateAckMsg(), gameEvent.IpEndPoint);
+                var coord = FinderFreePosition.FreePositionSnake(_gameModel.GameMap);
+                if (coord is not null)
+                {
+                    var id = _gameModel.AddPlayer(msg.Join.PlayerName, gameEvent.IpEndPoint, NodeRole.Normal, coord);
+                    _peer.AddMsg(CreatorMessages.CreateAckMsg(id), gameEvent.IpEndPoint);
+                }
+                else
+                {
+                    _peer.AddMsg(CreatorMessages.CreateErrorMsg(ViewConst.ErrorMsg), gameEvent.IpEndPoint);
+                }
                 break;
-            
+            case GameMessage.TypeOneofCase.State:
+                _gameModel.UpdateMap(msg.State.State); 
+                break;
         }
 
     }
