@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Snake.Model;
 using Snake.Net;
 
@@ -5,6 +7,8 @@ namespace Snake.Utils;
 
 public static class FinderFreePosition
 {
+
+    private static Random _random = new();
     public static GameState.Types.Coord? FreePositionSnake(Map map)
     {
         for(var x = 0; x < map.Width; x++)
@@ -23,8 +27,6 @@ public static class FinderFreePosition
         }
         return null;
     }
-
-
 
     private static bool IsFreePosition(Map map, int x, int y)
     {
@@ -51,5 +53,25 @@ public static class FinderFreePosition
             }
         }
         return true;
+    }
+
+    public static GameState.Types.Coord FreePositionApple(Map map)
+    {
+        var listFreePosition = new List<GameState.Types.Coord>();
+        for (var x = 0; x < map.Width; x++)
+        {
+            for (var y = 0; y < map.Height; y++)
+            {
+                if (map.GetGameObject(x, y) == GameObjects.Floor)
+                {
+                    listFreePosition.Add(new GameState.Types.Coord()
+                    {
+                        X = x,
+                        Y = y
+                    });
+                }
+            }
+        }
+        return listFreePosition[_random.Next(0, listFreePosition.Count - 1)];
     }
 }
