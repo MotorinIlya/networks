@@ -53,4 +53,10 @@ public static class MConst
         {GameObjects.Floor, Brushes.Black},
         {GameObjects.SnakeBody, Brushes.SeaGreen}
     };
+
+    public static readonly GameState.Types.Coord StartSnakeHead = new()
+    {
+        X = 5,
+        Y = 5
+    };
 }
