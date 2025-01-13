@@ -18,14 +18,23 @@ public class GameController : Observer
     {
         _peer = new Peer();
         _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint);
-        _peer.AddObserver(this);
-        _gameModel.Run();
     }
 
     public GameController(string playerName, string gameName, GameAnnouncement config, Peer peer, Map map)
     {
-        _peer = new Peer();
+        _peer = peer;
         _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config);
+    }
+
+    public void Run()
+    {
+        _gameModel.Run();
+    }
+
+    public void AddPeerObservers(TurnController turnController)
+    {
+        _peer.AddObserver(this);
+        _peer.AddObserver(turnController);
     }
 
     public void SearchPlayers()
@@ -83,6 +92,7 @@ public class GameController : Observer
                 _gameModel.UpdateMap(msg.State.State); 
                 break;
         }
-
     }
+
+    public GameModel Model => _gameModel;
 }

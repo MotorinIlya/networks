@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Snake.Controller;
 using Snake.Model;
 using Snake.Net;
 
@@ -12,21 +13,24 @@ namespace Snake.View.Game;
 public class GameBoard : UserControl
 {
     private Map _map;
-
     private Timer _timer;
+    private TurnController _controller;
     public GameBoard(string name, string gameName, int width, int height)
     {
         Focusable = true;
         _timer = new Timer(OnTimerTick, null, 0, 1000);
         _map = new Map(width, height);
-        _ = new Model.Game(name, gameName, _map);
+        var game = new Model.Game(name, gameName, _map);
+        _controller = game.GetTurnController();
     }
 
     public GameBoard(string playerName, string gameName, GameAnnouncement config, Peer peer)
     {
         Focusable = true;
+        _timer = new Timer(OnTimerTick, null, 0, 1000);
         _map = new Map(config.Config.Width, config.Config.Height);
-        _ = new Model.Game(playerName, gameName, config, peer, _map);
+        var game = new Model.Game(playerName, gameName, config, peer, _map);
+        _controller = game.GetTurnController();
     }
 
     private void OnTimerTick(object? state)
@@ -34,7 +38,10 @@ public class GameBoard : UserControl
         Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Background);
     }
 
-    public void HandleInput(KeyEventArgs e){}
+    public void HandleInput(Key e)
+    {
+        _controller.Update(e);
+    }
 
     public override void Render(DrawingContext context)
     {

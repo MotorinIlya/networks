@@ -36,6 +36,6 @@ public partial class GameWindow : Window
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
-       // _gameBoard.HandleInput(e.Key);
+       _gameBoard.HandleInput(e.Key);
     }
 }

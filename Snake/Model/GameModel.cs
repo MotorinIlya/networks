@@ -67,7 +67,9 @@ public class GameModel
             // move snakes and count eatten apples
             foreach (var snake in _state.Snakes)
             {
-                var gameObject = _map.GetGameObject(CoordUtils.GetWithOffset(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]));
+                var coord = CoordUtils.GetWithOffset(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
+                CoordUtils.NormalizeForMap(coord, _gameConfig.Width, _gameConfig.Height);
+                var gameObject = _map.GetGameObject(coord);
                 if (gameObject == GameObjects.Apple)
                 {
                     Eat(snake);
@@ -149,6 +151,7 @@ public class GameModel
         for (var i = 1; i < snake.Points.Count; i++)
         {
             CoordUtils.Sum(tmpCoord, snake.Points[i]);
+            CoordUtils.NormalizeForMap(tmpCoord, _gameConfig.Width, _gameConfig.Height);
             bodyMap[tmpCoord.X, tmpCoord.Y] = 1;
         }
     }
@@ -157,12 +160,14 @@ public class GameModel
     {
         snake.Points.Insert(1, MConst.OppositeDirection[snake.HeadDirection]);
         CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
+        CoordUtils.NormalizeForMap(snake.Points[0], _gameConfig.Width, _gameConfig.Height);
     }
 
     private void Move(GameState.Types.Snake snake)
     {
         snake.Points.Insert(1, MConst.OppositeDirection[snake.HeadDirection]);
         CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
+        CoordUtils.NormalizeForMap(snake.Points[0], _gameConfig.Width, _gameConfig.Height);
         snake.Points.RemoveAt(snake.Points.Count - 1);
     }
 
@@ -223,6 +228,32 @@ public class GameModel
             _lastOrderState = state.StateOrder;
             _state = state;
             _map.Update(state);
+        }
+    }
+
+    public void ChangeDirection(Direction newDirection, int playerId)
+    {
+        foreach(var snake in _state.Snakes)
+        {
+            if (snake.PlayerId == playerId)
+            {
+                snake.HeadDirection = newDirection;
+                return;
+            }
+        }
+    }
+
+    public void ChangeDirection(Direction newDirection, IPEndPoint endPoint)
+    {
+        string ipAddres = endPoint.Address.ToString();
+        int port = endPoint.Port;
+        foreach (var player in _state.Players.Players)
+        {
+            if (ipAddres == player.IpAddress && port == player.Port)
+            {
+                ChangeDirection(newDirection, player.Id);
+                return;
+            }
         }
     }
 

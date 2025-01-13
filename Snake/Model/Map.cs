@@ -18,7 +18,7 @@ public class Map
 
     public GameObjects GetGameObject(int x, int y) => _map[x, y];
 
-    public GameObjects GetGameObject(Net.GameState.Types.Coord coord) => _map[coord.X, coord.Y];
+    public GameObjects GetGameObject(GameState.Types.Coord coord) => _map[coord.X, coord.Y];
 
     private void FillFloorMap()
     {
@@ -46,6 +46,7 @@ public class Map
                 else
                 {
                     CoordUtils.Sum(coord, point);
+                    CoordUtils.NormalizeForMap(coord, Width, Height);
                 }
                 _map[coord.X, coord.Y] = GameObjects.SnakeBody;
             }

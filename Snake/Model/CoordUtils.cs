@@ -34,4 +34,18 @@ public static class CoordUtils
             Y = coord.Y
         };
     }
+
+    public static void NormalizeForMap(GameState.Types.Coord coord, int width, int height)
+    {
+        if (coord.X < 0)
+        {
+            coord.X += width;
+        }
+        if (coord.Y < 0)
+        {
+            coord.Y += height;
+        }
+        coord.X %= width;
+        coord.Y %= height;
+    }
 }

@@ -28,8 +28,6 @@ public class Peer : Observable
 
     private IPAddress _unicastAddress;
 
-    private NodeRole _nodeRole;
-
     public Peer()
     {
         //_activeCopies = [];

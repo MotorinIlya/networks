@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Avalonia.Input;
 using Avalonia.Media;
 using Snake.Net;
 
@@ -47,16 +48,17 @@ public static class MConst
         {Direction.Up, Up}
     };
 
-    public static readonly Dictionary<GameObjects, IBrush> ColorObject = new()
-    {
-        {GameObjects.Apple, Brushes.OrangeRed},
-        {GameObjects.Floor, Brushes.Black},
-        {GameObjects.SnakeBody, Brushes.SeaGreen}
-    };
-
     public static readonly GameState.Types.Coord StartSnakeHead = new()
     {
         X = 5,
         Y = 5
+    };
+
+    public static readonly Dictionary<Key, Direction> KeyDirection = new()
+    {
+        {Key.S, Direction.Down},
+        {Key.A, Direction.Left},
+        {Key.D, Direction.Right},
+        {Key.W, Direction.Up}
     };
 }
