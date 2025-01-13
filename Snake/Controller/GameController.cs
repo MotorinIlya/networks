@@ -95,4 +95,5 @@ public class GameController : Observer
     }
 
     public GameModel Model => _gameModel;
+    public Peer GamePeer => _peer;
 }

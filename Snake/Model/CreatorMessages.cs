@@ -4,13 +4,25 @@ namespace Snake.Model;
 
 public static class CreatorMessages
 {
-
+    public static GameMessage CreateSteerMsg(Direction direction)
+    {
+        var steerMsg = new GameMessage.Types.SteerMsg
+        {
+            Direction = direction
+        };
+        var msg = new GameMessage()
+        {
+            Steer = steerMsg
+        };
+        return msg;
+    }
+    
     public static GameMessage CreateStateMsg(GameModel model)
     {
         var gameState = model.GetState();
         var stateMsg = new GameMessage.Types.StateMsg
         {
-            State = gameState
+            State = gameState,
         };
         var msg = new GameMessage()
         {

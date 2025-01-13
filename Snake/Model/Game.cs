@@ -12,7 +12,7 @@ public class Game
     public Game(string name, string gameName, Map map)
     {
         _gameController = new GameController(name, gameName, map);
-        _turnController = new TurnController(_gameController.Model);
+        _turnController = new TurnController(_gameController.Model, _gameController.GamePeer);
         _gameController.AddPeerObservers(_turnController);
         _gameController.Run();
         _gameController.SearchPlayers();
@@ -21,7 +21,7 @@ public class Game
     public Game(string playerName, string gameName, GameAnnouncement config, Peer peer, Map map)
     {
         _gameController = new GameController(playerName, gameName, config, peer, map);
-        _turnController = new TurnController(_gameController.Model);
+        _turnController = new TurnController(_gameController.Model, peer);
         _gameController.AddPeerObservers(_turnController);
     }
 

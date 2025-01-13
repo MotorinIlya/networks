@@ -21,6 +21,8 @@ public class GameModel
 
     private GameState? _state;
 
+    private NodeRole _nodeRole;
+
     private int _lastOrderState = 0;
     public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint)
     {
@@ -39,6 +41,7 @@ public class GameModel
             Width = _map.Width,
             Height = _map.Height,
         };
+        _nodeRole = NodeRole.Master;
     }
 
     public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
@@ -47,6 +50,7 @@ public class GameModel
         _playerName = playerName;
         _gameName = gameName;
         _gameConfig = config.Config;
+        _nodeRole = NodeRole.Normal;
     }
 
     public void Run()
@@ -109,6 +113,7 @@ public class GameModel
                 AddApple();
             }
             _map.Update(_state);
+            _state.StateOrder++;
             Thread.Sleep(_gameConfig.StateDelayMs);
         }
     }
@@ -257,6 +262,18 @@ public class GameModel
         }
     }
 
+    public GamePlayer? GetMaster()
+    {
+        foreach (var player in _state.Players.Players)
+        {
+            if (player.Role == NodeRole.Master)
+            {
+                return player;
+            }
+        }
+        return null;
+    }
+
     public GameState GetState() => _state;
     public GamePlayers Players => _state.Players;
     public GameConfig Config => _gameConfig;
@@ -264,4 +281,5 @@ public class GameModel
     public int MainId => _mainId;
     public string GameName => _gameName;
     public Map GameMap => _map;
+    public NodeRole Role => _nodeRole;
 }

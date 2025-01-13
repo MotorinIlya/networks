@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Avalonia.Input;
-using Avalonia.Media;
 using Snake.Net;
 
 namespace Snake.Model;
@@ -8,25 +7,25 @@ namespace Snake.Model;
 
 public static class MConst
 {
-    public static GameState.Types.Coord Up = new()
+    public static readonly GameState.Types.Coord Up = new()
     {
         X = 0,
         Y = -1
     };
 
-    public static GameState.Types.Coord Down = new()
+    public static readonly GameState.Types.Coord Down = new()
     {
         X = 0,
         Y = 1
     };
 
-    public static GameState.Types.Coord Right = new()
+    public static readonly GameState.Types.Coord Right = new()
     {
         X = 1,
         Y = 0
     };
 
-    public static GameState.Types.Coord Left = new()
+    public static readonly GameState.Types.Coord Left = new()
     {
         X = -1,
         Y = 0

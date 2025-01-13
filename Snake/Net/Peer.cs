@@ -35,7 +35,7 @@ public class Peer : Observable
         _multicastSocket.Bind();
         _unicastSocket = new(NetConst.UnicastPort);
         _unicastPort = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Port;
-        _unicastAddress = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Address;
+        _unicastAddress = GetterIP.GetLocalIpAddress();
         _sendMessages = new();
         _games = [];
 

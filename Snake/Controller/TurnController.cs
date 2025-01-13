@@ -1,3 +1,4 @@
+using System.Net;
 using Avalonia.Input;
 using Snake.Model;
 using Snake.Net;
@@ -6,9 +7,11 @@ using Snake.Service.Event;
 
 namespace Snake.Controller;
 
-public class TurnController(GameModel gameModel) : Observer
+public class TurnController(GameModel gameModel, Peer peer) : Observer
 {
     private GameModel _model = gameModel;
+
+    private Peer _peer = peer;
 
     public void UpdateDirectionSnake(Direction newDirection, int playerId)
     {
@@ -30,7 +33,16 @@ public class TurnController(GameModel gameModel) : Observer
     {
         if (MConst.KeyDirection.ContainsKey(key))
         {
-            UpdateDirectionSnake(MConst.KeyDirection[key], _model.MainId);
+            if (_model.Role == NodeRole.Master)
+            {
+                UpdateDirectionSnake(MConst.KeyDirection[key], _model.MainId);
+            }
+            else if (_model.Role == NodeRole.Deputy || _model.Role == NodeRole.Normal)
+            {
+                var player = _model.GetMaster();
+                _peer.AddMsg(CreatorMessages.CreateSteerMsg(MConst.KeyDirection[key]), 
+                            new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
+            }
         }
     }
 }
