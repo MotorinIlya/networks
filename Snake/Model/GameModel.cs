@@ -1,18 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using Avalonia.Controls.Documents;
+using System.Threading;
 using Snake.Net;
-using Snake.Service;
-using Snake.Service.Event;
-using Snake.Utils;
 
 namespace Snake.Model;
 
 public class GameModel
 {
-    private GamePlayers _gamePlayers;
-
     private GameConfig _gameConfig;
 
     private string _gameName = "sss";
@@ -21,6 +16,7 @@ public class GameModel
 
     private int _playerId = 1;
 
+    private int _mainId;
     private string _playerName;
 
     private GameState? _state;
@@ -31,19 +27,18 @@ public class GameModel
         _map = map;
         _playerName = playerName;
         _gameName = gameName;
-        _gamePlayers = new GamePlayers();
         _state = new GameState()
         {
-            StateOrder = _lastOrderState
+            StateOrder = _lastOrderState,
+            Players = new GamePlayers()
         };
         AddPlayer(_playerName, endPoint, NodeRole.Master, MConst.StartSnakeHead);
-        //_gamePlayers.Players.Add(CreatePlayer(_playerName, endPoint.Address.ToString(), endPoint.Port, NodeRole.Master));
+        _mainId = _state.Players.Players[0].Id;
         _gameConfig = new GameConfig()
         {
             Width = _map.Width,
             Height = _map.Height,
         };
-
     }
 
     public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
@@ -51,54 +46,123 @@ public class GameModel
         _map = map;
         _playerName = playerName;
         _gameName = gameName;
-        _gamePlayers = config.Players;
         _gameConfig = config.Config;
     }
 
     public void Run()
     {
+        var threadRun = new Thread(RunState);
+        threadRun.Start();
+    }
+
+    private void RunState()
+    {
         while (_state is null);
-        var bodyList = new List<GameState.Types.Coord>();
+        var bodyMap = new int[_map.Width, _map.Height];
+        var snakeList = new List<GameState.Types.Snake>();
         while (true)
         {
-            var eattenApple = 0;
-            bodyList.Clear();
+            Array.Clear(bodyMap);
+            snakeList.Clear();
+            // move snakes and count eatten apples
             foreach (var snake in _state.Snakes)
             {
-                var gameObject = _map.GetGameObject(SumCoords.GetWithOffset(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]));
+                var gameObject = _map.GetGameObject(CoordUtils.GetWithOffset(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]));
                 if (gameObject == GameObjects.Apple)
                 {
                     Eat(snake);
-                    eattenApple++;
+                    RemoveApple(snake.Points[0]);
                 }
                 else
                 {
                     Move(snake);
                 }
-                GetCoordsBodySnake(snake, bodyList);
+                GetCoordsBodySnake(snake, bodyMap);
+            }
+
+            // verify that snake may be in this position
+            foreach (var snake in _state.Snakes)
+            {
+                var head = snake.Points[0];
+                if (bodyMap[head.X, head.Y] == 1)
+                {
+                    Die(snake);
+                }
+                else if (bodyMap[head.X, head.Y] == 0)
+                {
+                    bodyMap[head.X, head.Y] = 2;
+                    snakeList.Add(snake);
+                }
+                else if (bodyMap[head.X, head.Y] == 2)
+                {
+                    var searchedSnake = SearchSnake(snakeList, snake.Points[0]);
+                    Die(searchedSnake);
+                    Die(snake);
+                }
+            }
+
+            // generate new apple
+            for (var i = 0; i < _gameConfig.FoodStatic - _state.Foods.Count; i++)
+            {
+                AddApple();
+            }
+            _map.Update(_state);
+            Thread.Sleep(_gameConfig.StateDelayMs);
+        }
+    }
+
+    private void Die(GameState.Types.Snake? snake)
+    {
+        if (snake is not null)
+        {
+            DeletePlayer(snake.PlayerId);
+            _state.Snakes.Remove(snake);
+        }
+    }
+
+    private void DeletePlayer(int gameId)
+    {
+        foreach (var player in _state.Players.Players)
+        {
+            if (player.Id == gameId)
+            {
+                _state.Players.Players.Remove(player);
             }
         }
     }
 
-    private void GetCoordsBodySnake(GameState.Types.Snake snake, List<GameState.Types.Coord> bodyList)
+    private GameState.Types.Snake? SearchSnake(List<GameState.Types.Snake> list, GameState.Types.Coord coord)
     {
+        foreach(var snake in list)
+        {
+            if (CoordUtils.EqualCoord(snake.Points[0], coord))
+            {
+                return snake;
+            }
+        }
+        return null;
+    }
+
+    private void GetCoordsBodySnake(GameState.Types.Snake snake, int[,] bodyMap)
+    {
+        var tmpCoord = CoordUtils.GetEqualCoord(snake.Points[0]);
         for (var i = 1; i < snake.Points.Count; i++)
         {
-            
-            bodyList.Add(snake.Points[i]);
+            CoordUtils.Sum(tmpCoord, snake.Points[i]);
+            bodyMap[tmpCoord.X, tmpCoord.Y] = 1;
         }
     }
 
     private void Eat(GameState.Types.Snake snake)
     {
         snake.Points.Insert(1, MConst.OppositeDirection[snake.HeadDirection]);
-        SumCoords.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
+        CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
     }
 
     private void Move(GameState.Types.Snake snake)
     {
         snake.Points.Insert(1, MConst.OppositeDirection[snake.HeadDirection]);
-        SumCoords.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
+        CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
         snake.Points.RemoveAt(snake.Points.Count - 1);
     }
 
@@ -110,7 +174,14 @@ public class GameModel
 
     private void RemoveApple(GameState.Types.Coord position)
     {
-        _state.Foods.Remove(position);
+        for (var i = 0; i < _state.Foods.Count; i++)
+        {
+            if (CoordUtils.EqualCoord(_state.Foods[i], position))
+            {
+                _state.Foods.RemoveAt(i);
+                return;
+            }
+        }
     }
 
     private GamePlayer CreatePlayer(string name, string ipAddress, int port, NodeRole role)
@@ -131,7 +202,7 @@ public class GameModel
     public int AddPlayer(string name, IPEndPoint endPoint, NodeRole role, GameState.Types.Coord head)
     {
         var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, role);
-        _gamePlayers.Players.Add(player);
+        _state.Players.Players.Add(player);
         var snake = new GameState.Types.Snake
         {
             PlayerId = player.Id,
@@ -141,7 +212,6 @@ public class GameModel
         snake.Points.Add(head);
         snake.Points.Add(MConst.Left);
         _state.Snakes.Add(snake);
-        _state.Players.Players.Add(player);
 
         return player.Id;
     }
@@ -157,9 +227,10 @@ public class GameModel
     }
 
     public GameState GetState() => _state;
-    public GamePlayers Players => _gamePlayers;
+    public GamePlayers Players => _state.Players;
     public GameConfig Config => _gameConfig;
     public string MainName => _playerName;
+    public int MainId => _mainId;
     public string GameName => _gameName;
     public Map GameMap => _map;
 }

@@ -1,8 +1,8 @@
 using Snake.Net;
 
-namespace Snake.Utils;
+namespace Snake.Model;
 
-public static class SumCoords
+public static class CoordUtils
 {
     public static void Sum(GameState.Types.Coord src, GameState.Types.Coord offset)
     {
@@ -19,5 +19,19 @@ public static class SumCoords
         };
         Sum(coord, offset);
         return coord;
+    }
+
+    public static bool EqualCoord(GameState.Types.Coord first, GameState.Types.Coord second)
+    {
+        return (first.X == second.X) && (first.Y == second.Y);
+    }
+
+    public static GameState.Types.Coord GetEqualCoord(GameState.Types.Coord coord)
+    {
+        return new GameState.Types.Coord
+        {
+            X = coord.X,
+            Y = coord.Y
+        };
     }
 }

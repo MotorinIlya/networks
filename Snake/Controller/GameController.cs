@@ -4,7 +4,6 @@ using Snake.Model;
 using Snake.Net;
 using Snake.Service;
 using Snake.Service.Event;
-using Snake.Utils;
 using Snake.View;
 
 namespace Snake.Controller;
@@ -20,6 +19,7 @@ public class GameController : Observer
         _peer = new Peer();
         _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint);
         _peer.AddObserver(this);
+        _gameModel.Run();
     }
 
     public GameController(string playerName, string gameName, GameAnnouncement config, Peer peer, Map map)
@@ -49,7 +49,10 @@ public class GameController : Observer
             msg = CreatorMessages.CreateStateMsg(_gameModel);
             foreach (var player in _gameModel.Players.Players)
             {
-                _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
+                if (player.Id != _gameModel.MainId)
+                {
+                    _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
+                }
             }
             
             Thread.Sleep(NetConst.StartDelay);

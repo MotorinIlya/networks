@@ -1,6 +1,4 @@
-using System.Globalization;
 using Snake.Net;
-using Snake.Utils;
 
 namespace Snake.Model;
 
@@ -11,7 +9,7 @@ public class Map
     public Map(int width, int height)
     {
         _map = new GameObjects[width, height];
-        fillFloorMap();
+        FillFloorMap();
     }
 
     public int Height => _map.GetLength(1);
@@ -22,7 +20,7 @@ public class Map
 
     public GameObjects GetGameObject(Net.GameState.Types.Coord coord) => _map[coord.X, coord.Y];
 
-    private void fillFloorMap()
+    private void FillFloorMap()
     {
         for (var x = 0; x < Width; x++)
         {
@@ -35,7 +33,7 @@ public class Map
 
     public void Update(GameState state)
     {
-        fillFloorMap();
+        FillFloorMap();
         foreach (var snake in state.Snakes)
         {
             GameState.Types.Coord? coord = null;
@@ -43,11 +41,11 @@ public class Map
             {
                 if (coord is null)
                 {
-                    coord = point;
+                    coord = CoordUtils.GetEqualCoord(point);
                 }
                 else
                 {
-                    SumCoords.Sum(coord, point);
+                    CoordUtils.Sum(coord, point);
                 }
                 _map[coord.X, coord.Y] = GameObjects.SnakeBody;
             }

@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Snake.Model;
 using Snake.Net;
 
-namespace Snake.Utils;
+namespace Snake.Model;
 
 public static class FinderFreePosition
 {
