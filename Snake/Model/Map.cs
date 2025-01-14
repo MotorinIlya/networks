@@ -31,7 +31,7 @@ public class Map
         }
     }
 
-    public void Update(GameState state)
+    public void Update(GameModel model, GameState state)
     {
         FillFloorMap();
         foreach (var snake in state.Snakes)
@@ -48,7 +48,15 @@ public class Map
                     CoordUtils.Sum(coord, point);
                     CoordUtils.NormalizeForMap(coord, Width, Height);
                 }
-                _map[coord.X, coord.Y] = GameObjects.SnakeBody;
+
+                if (snake.PlayerId == model.MainId)
+                {
+                    _map[coord.X, coord.Y] = GameObjects.MainSnakeBody;
+                }
+                else
+                {
+                    _map[coord.X, coord.Y] = GameObjects.SnakeBody;
+                }
             }
         }
 

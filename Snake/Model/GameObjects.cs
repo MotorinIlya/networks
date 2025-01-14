@@ -4,5 +4,6 @@ public enum GameObjects
 {
     Floor,
     SnakeBody,
+    MainSnakeBody,
     Apple,
 }

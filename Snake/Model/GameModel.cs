@@ -118,7 +118,7 @@ public class GameModel
             {
                 AddApple();
             }
-            _map.Update(_state);
+            _map.Update(this, _state);
             _state.StateOrder++;
             Thread.Sleep(_gameConfig.StateDelayMs);
         }
@@ -139,7 +139,7 @@ public class GameModel
         {
             if (player.Id == gameId)
             {
-                _state.Players.Players.Remove(player);
+                player.Role = NodeRole.Viewer;
             }
         }
     }
@@ -172,6 +172,7 @@ public class GameModel
         snake.Points.Insert(1, MConst.OppositeDirection[snake.HeadDirection]);
         CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
         CoordUtils.NormalizeForMap(snake.Points[0], _gameConfig.Width, _gameConfig.Height);
+        GetPlayer(snake.PlayerId).Score++;
     }
 
     private void Move(GameState.Types.Snake snake)
@@ -247,7 +248,7 @@ public class GameModel
         {
             _lastOrderState = state.StateOrder;
             _state = state;
-            _map.Update(state);
+            _map.Update(this, state);
             SetMasterAndDeputy();
         }
     }
@@ -304,16 +305,34 @@ public class GameModel
 
     public void SetMasterAndDeputy()
     {
+        var HasDeputy = false;
         foreach (var player in _state.Players.Players)
         {
+            if (player.Id == _mainId)
+            {
+                _nodeRole = player.Role;
+            }
             if (player.Role == NodeRole.Master)
             {
                 _masterId = player.Id;
-                continue;
             }
             if (player.Role == NodeRole.Deputy)
             {
                 _deputyId = player.Id;
+                HasDeputy = true;
+            }
+        }
+
+        //search and create deputy
+        if (!HasDeputy)
+        {
+            foreach (var player in _state.Players.Players)
+            {
+                if (player.Role == NodeRole.Normal)
+                {
+                    player.Role = NodeRole.Deputy;
+                    
+                }
             }
         }
     }

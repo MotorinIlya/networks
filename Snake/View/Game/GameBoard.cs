@@ -17,22 +17,22 @@ public class GameBoard : UserControl
     private TurnController _controller;
 
     //create master
-    public GameBoard(string name, string gameName, int width, int height)
+    public GameBoard(GameWindow gameWindow, string name, string gameName, int width, int height)
     {
         Focusable = true;
         _timer = new Timer(OnTimerTick, null, 0, 1000);
         _map = new Map(width, height);
-        var game = new Model.Game(name, gameName, _map);
+        var game = new Model.Game(gameWindow, name, gameName, _map);
         _controller = game.GetTurnController();
     }
 
     //create joiner
-    public GameBoard(string playerName, string gameName, GameAnnouncement config, Peer peer)
+    public GameBoard(GameWindow gameWindow, string playerName, string gameName, GameAnnouncement config, Peer peer)
     {
         Focusable = true;
         _timer = new Timer(OnTimerTick, null, 0, 1000);
         _map = new Map(config.Config.Width, config.Config.Height);
-        var game = new Model.Game(playerName, gameName, config, peer, _map);
+        var game = new Model.Game(gameWindow, playerName, gameName, config, peer, _map);
         _controller = game.GetTurnController();
     }
 

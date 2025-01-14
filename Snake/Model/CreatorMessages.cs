@@ -17,10 +17,48 @@ public static class CreatorMessages
         return msg;
     }
 
-    // public static GameMessage CreateRoleChangeMsg()
-    // {
+    public static GameMessage CreateRoleChangeMsg(NodeRole sender, NodeRole receiver)
+    {
+        var roleChangeMsg = new GameMessage.Types.RoleChangeMsg
+        {
+            SenderRole = sender,
+            ReceiverRole = receiver
+        };
+        var msg = new GameMessage()
+        {
+            RoleChange = roleChangeMsg,
+            MsgSeq = _msgSeq
+        };
+        _msgSeq++;
+        return msg;
+    }
 
-    // }
+    public static GameMessage CreateRoleChangeMsg(MConst.RoleChange roleChange, NodeRole nodeRole)
+    {
+        GameMessage.Types.RoleChangeMsg roleChangeMsg;
+        if (roleChange == MConst.RoleChange.Sender)
+        {
+            roleChangeMsg = new()
+            {
+                SenderRole = nodeRole
+            };
+        }
+        else
+        {
+            roleChangeMsg = new()
+            {
+                ReceiverRole = nodeRole
+            };
+        }
+        var msg = new GameMessage()
+        {
+            RoleChange = roleChangeMsg,
+            MsgSeq = _msgSeq
+        };
+        _msgSeq++;
+        return msg;
+    }
+    
     public static GameMessage CreateSteerMsg(Direction direction)
     {
         var steerMsg = new GameMessage.Types.SteerMsg
@@ -29,7 +67,8 @@ public static class CreatorMessages
         };
         var msg = new GameMessage()
         {
-            Steer = steerMsg
+            Steer = steerMsg,
+            MsgSeq = _msgSeq
         };
         _msgSeq++;
         return msg;
@@ -44,7 +83,8 @@ public static class CreatorMessages
         };
         var msg = new GameMessage()
         {
-            State = stateMsg
+            State = stateMsg,
+            MsgSeq = _msgSeq
         };
         _msgSeq++;
         return msg;
@@ -58,7 +98,8 @@ public static class CreatorMessages
         };
         var msg = new GameMessage()
         {
-            Error = errorMsg
+            Error = errorMsg,
+            MsgSeq = _msgSeq
         };
         _msgSeq++;
         return msg;
@@ -74,7 +115,8 @@ public static class CreatorMessages
         };
         var msg = new GameMessage()
         {
-            Join = joinMsg
+            Join = joinMsg,
+            MsgSeq = _msgSeq
         };
         _msgSeq++;
         return msg;

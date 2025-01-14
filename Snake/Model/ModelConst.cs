@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Avalonia.Input;
 using Snake.Net;
@@ -60,4 +61,10 @@ public static class MConst
         {Key.D, Direction.Right},
         {Key.W, Direction.Up}
     };
+
+    public enum RoleChange
+    {
+        Sender,
+        Receiver
+    }
 }

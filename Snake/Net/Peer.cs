@@ -32,6 +32,8 @@ public class Peer : Observable
 
     private int _stateDelayMs = NetConst.StartDelay;
 
+    private DateTime _lastTimeMasterMsg;
+
     public Peer()
     {
         //_activeCopies = [];
@@ -79,10 +81,7 @@ public class Peer : Observable
             // {
             //     _activeCopies[remoteEndPoint] = DateTime.Now;
             // }
-            lock (_games)
-            {
-                _games[remoteEndPoint] = message;
-            }
+            _games[remoteEndPoint] = message;
         }
     }
 
@@ -113,7 +112,6 @@ public class Peer : Observable
             if (_sendMessages.TryDequeue(out var message))
             {
                 // Send message
-                
                 var msg = message.Item1;
                 var remoteEndPoint = message.Item2;
                 var repeat = message.Item3;
@@ -127,7 +125,7 @@ public class Peer : Observable
                     _pendingAcks[(msg.MsgSeq, remoteEndPoint.ToString())] = resetEvent;
 
                     //wait ack message
-                    var ackReceived = resetEvent.WaitOne(_stateDelayMs / 10); // разобраться с stateOrderDelay, чтобы везде он был одинаковым
+                    var ackReceived = resetEvent.WaitOne(_stateDelayMs / 10);
 
                     if (!ackReceived)
                     {

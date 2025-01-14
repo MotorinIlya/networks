@@ -16,7 +16,7 @@ public partial class GameWindow : Window
         Height = height * ViewConst.BlockSize;
         Title = "Snake";
 
-        _gameBoard = new GameBoard(name, gameName, width, height);
+        _gameBoard = new GameBoard(this, name, gameName, width, height);
         Content = _gameBoard;
 
         KeyDown += OnKeyDown;
@@ -30,7 +30,7 @@ public partial class GameWindow : Window
         Height = config.Config.Height * ViewConst.BlockSize;
         Title = "Snake";
 
-        _gameBoard = new GameBoard(playerName, gameName, config, peer);
+        _gameBoard = new GameBoard(this, playerName, gameName, config, peer);
         Content = _gameBoard;
 
         KeyDown += OnKeyDown;
@@ -39,5 +39,10 @@ public partial class GameWindow : Window
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
        _gameBoard.HandleInput(e.Key);
+    }
+
+    public void ShowError()
+    {
+        
     }
 }

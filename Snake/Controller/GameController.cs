@@ -1,10 +1,12 @@
 using System.Net;
 using System.Threading;
+using Avalonia.Controls;
 using Snake.Model;
 using Snake.Net;
 using Snake.Service;
 using Snake.Service.Event;
 using Snake.View;
+using Snake.View.Game;
 
 namespace Snake.Controller;
 
@@ -13,18 +15,27 @@ public class GameController : Observer
     private GameModel _gameModel;
 
     private Peer _peer;
+    
+    private GameWindow _gameWindow;
 
     //create master
-    public GameController(string name, string gameName, Map map)
+    public GameController(GameWindow gameWindow, string name, string gameName, Map map)
     {
+        _gameWindow = gameWindow;
         _peer = new Peer();
         _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint);
         _peer.AddDelay(_gameModel.StateDelayMs);
     }
 
     //create joiner
-    public GameController(string playerName, string gameName, GameAnnouncement config, Peer peer, Map map)
+    public GameController(GameWindow gameWindow, 
+                            string playerName, 
+                            string gameName, 
+                            GameAnnouncement config, 
+                            Peer peer, 
+                            Map map)
     {
+        _gameWindow = gameWindow;
         _peer = peer;
         _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config);
         _peer.AddDelay(_gameModel.StateDelayMs);
@@ -115,6 +126,16 @@ public class GameController : Observer
                 break;
             case GameMessage.TypeOneofCase.Ping:
                 _peer.AcceptAck(msg.MsgSeq, endPoint.ToString());
+                break;
+            case GameMessage.TypeOneofCase.Error:
+                _peer.AcceptAck(msg.MsgSeq, endPoint.ToString());
+                _gameWindow.Close();
+                _gameWindow.ShowError();
+                break;
+            case GameMessage.TypeOneofCase.Discover:
+                _peer.AddMsg(CreatorMessages.CreateAnnouncementMsg(_gameModel), endPoint);
+                break;
+            case GameMessage.TypeOneofCase.RoleChange:
                 break;
         }
     }

@@ -13,7 +13,8 @@ public static class ViewConst
     {
         {GameObjects.Floor, Brushes.Black},
         {GameObjects.SnakeBody, Brushes.Blue},
-        {GameObjects.Apple, Brushes.Red}
+        {GameObjects.Apple, Brushes.Red},
+        {GameObjects.MainSnakeBody, Brushes.Green}
     };
 
     public const string ErrorMsg = "The game is full";
