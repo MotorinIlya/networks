@@ -37,13 +37,19 @@ public class TurnController(GameModel gameModel, Peer peer) : Observer
         {
             if (_model.Role == NodeRole.Master)
             {
-                UpdateDirectionSnake(MConst.KeyDirection[key], _model.MainId);
+                if (_model.GetSnake(_model.MainId).HeadDirection != MConst.OpKeyDirection[key])
+                {
+                    UpdateDirectionSnake(MConst.KeyDirection[key], _model.MainId);
+                }
             }
             else if (_model.Role == NodeRole.Deputy || _model.Role == NodeRole.Normal)
             {
-                var player = _model.GetMaster();
-                _peer.AddMsg(CreatorMessages.CreateSteerMsg(MConst.KeyDirection[key]), 
-                            new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
+                if (_model.GetSnake(_model.MainId).HeadDirection != MConst.OpKeyDirection[key])
+                {
+                    var player = _model.GetMaster();
+                    _peer.AddMsg(CreatorMessages.CreateSteerMsg(MConst.KeyDirection[key]), 
+                                new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
+                }
             }
         }
     }

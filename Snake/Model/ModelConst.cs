@@ -32,7 +32,7 @@ public static class MConst
         Y = 0
     };
 
-    public static readonly Dictionary<Direction, GameState.Types.Coord> OppositeDirection = new()
+    public static readonly Dictionary<Direction, GameState.Types.Coord> OppositeDirectionCoord = new()
     {
         {Direction.Down, Up},
         {Direction.Left, Right},
@@ -60,6 +60,14 @@ public static class MConst
         {Key.A, Direction.Left},
         {Key.D, Direction.Right},
         {Key.W, Direction.Up}
+    };
+
+    public static readonly Dictionary<Key, Direction> OpKeyDirection = new()
+    {
+        {Key.S, Direction.Up},
+        {Key.A, Direction.Right},
+        {Key.D, Direction.Left},
+        {Key.W, Direction.Down}
     };
 
     public enum RoleChange

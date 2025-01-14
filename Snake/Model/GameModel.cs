@@ -169,7 +169,7 @@ public class GameModel
 
     private void Eat(GameState.Types.Snake snake)
     {
-        snake.Points.Insert(1, MConst.OppositeDirection[snake.HeadDirection]);
+        snake.Points.Insert(1, MConst.OppositeDirectionCoord[snake.HeadDirection]);
         CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
         CoordUtils.NormalizeForMap(snake.Points[0], _gameConfig.Width, _gameConfig.Height);
         GetPlayer(snake.PlayerId).Score++;
@@ -177,7 +177,7 @@ public class GameModel
 
     private void Move(GameState.Types.Snake snake)
     {
-        snake.Points.Insert(1, MConst.OppositeDirection[snake.HeadDirection]);
+        snake.Points.Insert(1, MConst.OppositeDirectionCoord[snake.HeadDirection]);
         CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
         CoordUtils.NormalizeForMap(snake.Points[0], _gameConfig.Width, _gameConfig.Height);
         snake.Points.RemoveAt(snake.Points.Count - 1);
@@ -298,6 +298,18 @@ public class GameModel
             if (player.Id == id)
             {
                 return player;
+            }
+        }
+        return null;
+    }
+
+    public GameState.Types.Snake? GetSnake(int id)
+    {
+        foreach (var snake in _state.Snakes)
+        {
+            if (snake.PlayerId == id)
+            {
+                return snake;
             }
         }
         return null;
