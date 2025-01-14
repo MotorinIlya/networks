@@ -4,6 +4,23 @@ namespace Snake.Model;
 
 public static class CreatorMessages
 {
+    private static long _msgSeq = 0;
+    public static GameMessage CreatePingMsg()
+    {
+        var pingMsg = new GameMessage.Types.PingMsg();
+        var msg = new GameMessage()
+        {
+            Ping = pingMsg,
+            MsgSeq = _msgSeq
+        };
+        _msgSeq++;
+        return msg;
+    }
+
+    // public static GameMessage CreateRoleChangeMsg()
+    // {
+
+    // }
     public static GameMessage CreateSteerMsg(Direction direction)
     {
         var steerMsg = new GameMessage.Types.SteerMsg
@@ -14,6 +31,7 @@ public static class CreatorMessages
         {
             Steer = steerMsg
         };
+        _msgSeq++;
         return msg;
     }
     
@@ -28,6 +46,7 @@ public static class CreatorMessages
         {
             State = stateMsg
         };
+        _msgSeq++;
         return msg;
     }
     
@@ -41,6 +60,7 @@ public static class CreatorMessages
         {
             Error = errorMsg
         };
+        _msgSeq++;
         return msg;
     }
     
@@ -56,21 +76,23 @@ public static class CreatorMessages
         {
             Join = joinMsg
         };
+        _msgSeq++;
         return msg;
     }
 
-    public static GameMessage CreateAckMsg(int receiverId)
+    public static GameMessage CreateAckMsg(int receiverId, long msgSeq)
     {
         var ackMsg = new GameMessage.Types.AckMsg();
         var msg = new GameMessage()
         {
             Ack = ackMsg,
-            ReceiverId = receiverId
+            ReceiverId = receiverId,
+            MsgSeq = msgSeq
         };
         return msg;
     }
 
-        public static GameMessage CreateAnnouncementMsg(GameModel model)
+    public static GameMessage CreateAnnouncementMsg(GameModel model)
     {
         var annMsg = new GameMessage.Types.AnnouncementMsg();
         annMsg.Games.Add(createGameAnnouncement(model));

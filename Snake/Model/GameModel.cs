@@ -8,6 +8,8 @@ namespace Snake.Model;
 
 public class GameModel
 {
+    private Dictionary<IPEndPoint, int> _endPointToId = [];
+
     private GameConfig _gameConfig;
 
     private string _gameName = "sss";
@@ -212,6 +214,7 @@ public class GameModel
     public int AddPlayer(string name, IPEndPoint endPoint, NodeRole role, GameState.Types.Coord head)
     {
         var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, role);
+        _endPointToId[endPoint] = player.Id;
         _state.Players.Players.Add(player);
         var snake = new GameState.Types.Snake
         {
@@ -282,4 +285,18 @@ public class GameModel
     public string GameName => _gameName;
     public Map GameMap => _map;
     public NodeRole Role => _nodeRole;
+    public int StateDelayMs => _gameConfig.StateDelayMs;
+    public int EndPointToId(IPEndPoint endPoint)
+    {
+        var address = endPoint.Address.ToString();
+        var port = endPoint.Port;
+        foreach (var player in _state.Players.Players)
+        {
+            if ((string.Compare(player.IpAddress, address) == 0) && (player.Port == port))
+            {
+                return player.Id;
+            }
+        }
+        throw new Exception();
+    }
 }

@@ -15,6 +15,8 @@ public class GameBoard : UserControl
     private Map _map;
     private Timer _timer;
     private TurnController _controller;
+
+    //create master
     public GameBoard(string name, string gameName, int width, int height)
     {
         Focusable = true;
@@ -24,6 +26,7 @@ public class GameBoard : UserControl
         _controller = game.GetTurnController();
     }
 
+    //create joiner
     public GameBoard(string playerName, string gameName, GameAnnouncement config, Peer peer)
     {
         Focusable = true;

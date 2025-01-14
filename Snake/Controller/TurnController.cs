@@ -21,10 +21,12 @@ public class TurnController(GameModel gameModel, Peer peer) : Observer
     public override void Update(GameEvent gameEvent)
     {
         var msg = gameEvent.Message;
+        var endPoint = gameEvent.IpEndPoint;
         switch (msg.TypeCase)
         {
             case GameMessage.TypeOneofCase.Steer:
-                _model.ChangeDirection(msg.Steer.Direction, gameEvent.IpEndPoint);
+                _model.ChangeDirection(msg.Steer.Direction, endPoint);
+                _peer.AddMsg(CreatorMessages.CreateAckMsg(_model.EndPointToId(endPoint), msg.MsgSeq), endPoint);
                 break;
         }
     }

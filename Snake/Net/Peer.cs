@@ -18,7 +18,9 @@ public class Peer : Observable
 
     private Dictionary<IPEndPoint, GameMessage> _games;
 
-    private ConcurrentQueue<(GameMessage, IPEndPoint)> _sendMessages;
+    private ConcurrentQueue<(GameMessage, IPEndPoint, bool)> _sendMessages;
+
+    private ConcurrentDictionary<(long, string), ManualResetEvent> _pendingAcks;
 
     private MulticastSocket _multicastSocket;
 
@@ -28,6 +30,8 @@ public class Peer : Observable
 
     private IPAddress _unicastAddress;
 
+    private int _stateDelayMs = NetConst.StartDelay;
+
     public Peer()
     {
         //_activeCopies = [];
@@ -36,7 +40,8 @@ public class Peer : Observable
         _unicastSocket = new(NetConst.UnicastPort);
         _unicastPort = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Port;
         _unicastAddress = GetterIP.GetLocalIpAddress();
-        _sendMessages = new();
+        _sendMessages = [];
+        _pendingAcks = [];
         _games = [];
 
         var sendThread = new Thread(SendMsg);
@@ -44,6 +49,11 @@ public class Peer : Observable
 
         var receiveThread = new Thread(ReceiveMsg);
         receiveThread.Start();
+    }
+
+    public void AddDelay(int delay)
+    {
+        _stateDelayMs = delay;
     }
 
 
@@ -94,22 +104,48 @@ public class Peer : Observable
     //     }
     // }
 
-    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => _sendMessages.Enqueue((msg, remoteEndPoint));
+    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => _sendMessages.Enqueue((msg, remoteEndPoint, false));
 
-    public void SendMsg()
+    public async void SendMsg()
     {
         while (true)
         {
             if (_sendMessages.TryDequeue(out var message))
             {
+                // Send message
+                
                 var msg = message.Item1;
                 var remoteEndPoint = message.Item2;
+                var repeat = message.Item3;
                 var buffer = msg.ToByteArray();
                 _unicastSocket.Send(buffer, buffer.Length, remoteEndPoint);
+
+                if (msg.TypeCase != GameMessage.TypeOneofCase.Ack 
+                    && msg.TypeCase != GameMessage.TypeOneofCase.Announcement)
+                {
+                    var resetEvent = new ManualResetEvent(false);
+                    _pendingAcks[(msg.MsgSeq, remoteEndPoint.ToString())] = resetEvent;
+
+                    //wait ack message
+                    var ackReceived = resetEvent.WaitOne(_stateDelayMs / 10); // разобраться с stateOrderDelay, чтобы везде он был одинаковым
+
+                    if (!ackReceived)
+                    {
+                        if (!repeat)
+                        {
+                            _sendMessages.Enqueue((msg, remoteEndPoint, true));
+                        }
+                        else
+                        {
+                            AddMsg(CreatorMessages.CreatePingMsg(), remoteEndPoint);
+                        }
+                    }
+                }
+
             }
             else
             {
-                Thread.Sleep(50);
+                Thread.Sleep(1);
             }
         }
     }
@@ -122,6 +158,14 @@ public class Peer : Observable
             var buffer = _unicastSocket.Receive(ref remoteEndPoint);
             var message = GameMessage.Parser.ParseFrom(buffer);
             Update(new GameEvent(message, remoteEndPoint));
+        }
+    }
+
+    public void AcceptAck(long msgSeq, string ipEndPoint)
+    {
+        if (_pendingAcks.TryGetValue((msgSeq, ipEndPoint), out var resetEvent))
+        {
+            resetEvent.Set();
         }
     }
 

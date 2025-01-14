@@ -18,12 +18,14 @@ public class GameController : Observer
     {
         _peer = new Peer();
         _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint);
+        _peer.AddDelay(_gameModel.StateDelayMs);
     }
 
     public GameController(string playerName, string gameName, GameAnnouncement config, Peer peer, Map map)
     {
         _peer = peer;
         _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config);
+        _peer.AddDelay(_gameModel.StateDelayMs);
     }
 
     public void Run()
@@ -71,6 +73,7 @@ public class GameController : Observer
     public override void Update(GameEvent gameEvent)
     {
         var msg = gameEvent.Message;
+        var endPoint = gameEvent.IpEndPoint;
 
         switch(msg.TypeCase)
         {
@@ -80,16 +83,21 @@ public class GameController : Observer
                 var coord = FinderFreePosition.FreePositionSnake(_gameModel.GameMap);
                 if (coord is not null)
                 {
-                    var id = _gameModel.AddPlayer(msg.Join.PlayerName, gameEvent.IpEndPoint, NodeRole.Normal, coord);
-                    _peer.AddMsg(CreatorMessages.CreateAckMsg(id), gameEvent.IpEndPoint);
+                    var id = _gameModel.AddPlayer(msg.Join.PlayerName, endPoint, NodeRole.Normal, coord);
+                    _peer.AddMsg(CreatorMessages.CreateAckMsg(id, msg.MsgSeq), endPoint);
                 }
                 else
                 {
-                    _peer.AddMsg(CreatorMessages.CreateErrorMsg(ViewConst.ErrorMsg), gameEvent.IpEndPoint);
+                    _peer.AddMsg(CreatorMessages.CreateErrorMsg(ViewConst.ErrorMsg), endPoint);
                 }
                 break;
             case GameMessage.TypeOneofCase.State:
                 _gameModel.UpdateMap(msg.State.State); 
+                _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.EndPointToId(endPoint), msg.MsgSeq), 
+                                gameEvent.IpEndPoint);
+                break;
+            case GameMessage.TypeOneofCase.Ack:
+                _peer.AcceptAck(msg.MsgSeq, endPoint.ToString());
                 break;
         }
     }

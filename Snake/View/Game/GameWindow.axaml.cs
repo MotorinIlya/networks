@@ -8,6 +8,7 @@ public partial class GameWindow : Window
 {
     private GameBoard _gameBoard;
 
+    //create master
     public GameWindow(string name, string gameName, int width, int height)
     {
         CanResize = false;
@@ -21,6 +22,7 @@ public partial class GameWindow : Window
         KeyDown += OnKeyDown;
     }
 
+    //create joiner
     public GameWindow(string playerName, string gameName, GameAnnouncement config, Peer peer)
     {
         CanResize = false;
