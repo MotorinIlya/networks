@@ -14,6 +14,14 @@
             <TextBlock Text="Name"/>
             <TextBox x:Name="PlayerName"/>
         </StackPanel>
+        <StackPanel Orientation="Horizontal"
+                    Margin="20">
+            <TextBlock Text="Role"/>
+            <ComboBox x:Name="PlayerRole">
+                <ComboBoxItem>Normal</ComboBoxItem>
+                <ComboBoxItem>Viewer</ComboBoxItem>
+            </ComboBox>
+        </StackPanel>
         <StackPanel Width="200" 
                     Orientation="Vertical"
                     Margin="20"

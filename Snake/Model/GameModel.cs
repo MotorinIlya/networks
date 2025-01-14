@@ -19,6 +19,8 @@ public class GameModel
     private int _playerId = 1;
 
     private int _mainId;
+    private int _deputyId;
+    private int _masterId;
     private string _playerName;
 
     private GameState? _state;
@@ -26,6 +28,8 @@ public class GameModel
     private NodeRole _nodeRole;
 
     private int _lastOrderState = 0;
+
+    //create master
     public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint)
     {
         _map = map;
@@ -46,13 +50,13 @@ public class GameModel
         _nodeRole = NodeRole.Master;
     }
 
+    //create joiner
     public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
     {
         _map = map;
         _playerName = playerName;
         _gameName = gameName;
         _gameConfig = config.Config;
-        _nodeRole = NodeRole.Normal;
     }
 
     public void Run()
@@ -229,6 +233,14 @@ public class GameModel
         return player.Id;
     }
 
+    public int AddViewer(string name, IPEndPoint endPoint)
+    {
+        var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, NodeRole.Viewer);
+        _endPointToId[endPoint] = player.Id;
+        _state.Players.Players.Add(player);
+        return player.Id;
+    }
+
     public void UpdateMap(GameState state)
     {
         if (state.StateOrder > _lastOrderState)
@@ -236,6 +248,7 @@ public class GameModel
             _lastOrderState = state.StateOrder;
             _state = state;
             _map.Update(state);
+            SetMasterAndDeputy();
         }
     }
 
@@ -277,6 +290,35 @@ public class GameModel
         return null;
     }
 
+    public GamePlayer? GetPlayer(int id)
+    {
+        foreach (var player in _state.Players.Players)
+        {
+            if (player.Id == id)
+            {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    public void SetMasterAndDeputy()
+    {
+        foreach (var player in _state.Players.Players)
+        {
+            if (player.Role == NodeRole.Master)
+            {
+                _masterId = player.Id;
+                continue;
+            }
+            if (player.Role == NodeRole.Deputy)
+            {
+                _deputyId = player.Id;
+            }
+        }
+    }
+
+    public void SetId(int id) => _mainId = id;
     public GameState GetState() => _state;
     public GamePlayers Players => _state.Players;
     public GameConfig Config => _gameConfig;

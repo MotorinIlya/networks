@@ -64,13 +64,13 @@ public static class CreatorMessages
         return msg;
     }
     
-    public static GameMessage CreateJoinMsg(string player_name, string game_name)
+    public static GameMessage CreateJoinMsg(string player_name, string game_name, NodeRole role)
     {
         var joinMsg = new GameMessage.Types.JoinMsg
         {
             GameName = game_name,
             PlayerName = player_name,
-            RequestedRole = NodeRole.Normal
+            RequestedRole = role
         };
         var msg = new GameMessage()
         {

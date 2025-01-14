@@ -14,6 +14,7 @@ public class GameController : Observer
 
     private Peer _peer;
 
+    //create master
     public GameController(string name, string gameName, Map map)
     {
         _peer = new Peer();
@@ -21,6 +22,7 @@ public class GameController : Observer
         _peer.AddDelay(_gameModel.StateDelayMs);
     }
 
+    //create joiner
     public GameController(string playerName, string gameName, GameAnnouncement config, Peer peer, Map map)
     {
         _peer = peer;
@@ -80,15 +82,23 @@ public class GameController : Observer
             case GameMessage.TypeOneofCase.Announcement:
                 break;
             case GameMessage.TypeOneofCase.Join:
-                var coord = FinderFreePosition.FreePositionSnake(_gameModel.GameMap);
-                if (coord is not null)
+                if (msg.Join.RequestedRole != NodeRole.Viewer)
                 {
-                    var id = _gameModel.AddPlayer(msg.Join.PlayerName, endPoint, NodeRole.Normal, coord);
-                    _peer.AddMsg(CreatorMessages.CreateAckMsg(id, msg.MsgSeq), endPoint);
+                    var coord = FinderFreePosition.FreePositionSnake(_gameModel.GameMap);
+                    if (coord is not null)
+                    {
+                        var id = _gameModel.AddPlayer(msg.Join.PlayerName, endPoint, NodeRole.Normal, coord);
+                        _peer.AddMsg(CreatorMessages.CreateAckMsg(id, msg.MsgSeq), endPoint);
+                    }
+                    else
+                    {
+                        _peer.AddMsg(CreatorMessages.CreateErrorMsg(ViewConst.ErrorMsg), endPoint);
+                    }
                 }
                 else
                 {
-                    _peer.AddMsg(CreatorMessages.CreateErrorMsg(ViewConst.ErrorMsg), endPoint);
+                    var id = _gameModel.AddViewer(msg.Join.PlayerName, endPoint);
+                    _peer.AddMsg(CreatorMessages.CreateAckMsg(id, msg.MsgSeq), endPoint);
                 }
                 break;
             case GameMessage.TypeOneofCase.State:
@@ -97,6 +107,13 @@ public class GameController : Observer
                                 gameEvent.IpEndPoint);
                 break;
             case GameMessage.TypeOneofCase.Ack:
+                _peer.AcceptAck(msg.MsgSeq, endPoint.ToString());
+                if (msg.HasReceiverId)
+                {
+                    _gameModel.SetId(msg.ReceiverId);
+                }
+                break;
+            case GameMessage.TypeOneofCase.Ping:
                 _peer.AcceptAck(msg.MsgSeq, endPoint.ToString());
                 break;
         }

@@ -1,7 +1,5 @@
 using System.Threading;
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
 using Snake.Model;
 using Snake.Net;
 using Snake.View.Game;
@@ -35,14 +33,28 @@ public partial class JoinWindow : Window
                 Content = gameName
             };
             button.Click += (sender, e) => {
+                var role = GetRole(PlayerRole);
                 var playerName = PlayerName.Text;
-                var joinMsg = CreatorMessages.CreateJoinMsg(playerName, gameName);
+                var joinMsg = CreatorMessages.CreateJoinMsg(playerName, gameName, role);
                 _peer.AddMsg(joinMsg, endPoint);
                 var gameWindow = new GameWindow(playerName, gameName, gameMsg.Announcement.Games[0], _peer);
                 gameWindow.Show();
                 Close();
             };
             games.Children.Add(button);
+        }
+    }
+
+    private NodeRole GetRole(ComboBox box)
+    {
+        var selectedItem = PlayerRole.SelectedItem as ComboBoxItem;
+        if (selectedItem is not null)
+        {
+            return ViewConst.StringToRole[selectedItem.Content.ToString()];
+        }
+        else
+        {
+            return ViewConst.StringToRole["Viewer"];
         }
     }
 }
