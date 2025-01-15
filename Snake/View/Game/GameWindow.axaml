@@ -2,7 +2,37 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d"
         x:Class="Snake.View.Game.GameWindow"
         Title="Snake">
+    <Grid x:Name="MainGrid">
+        <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="163"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="1" 
+                Background="LightGray"
+                HorizontalAlignment="Center">
+            <TextBlock Text="Statistics" 
+                    FontSize="16" 
+                    FontWeight="Bold" 
+                    Margin="0 0 0 10"
+                    Foreground="Green"/>
+            <StackPanel x:Name="PlayerBoard"
+                    HorizontalAlignment="Center"
+                    Margin="10">
+
+                <StackPanel.Styles>
+                    <Style Selector="TextBlock">
+                        <Setter Property="FontSize"
+                                Value="15"/>
+                        <Setter Property="Foreground"
+                                Value="Green"/>
+                    </Style>
+                </StackPanel.Styles>
+
+            </StackPanel>
+        </StackPanel>
+    </Grid>
 </Window>

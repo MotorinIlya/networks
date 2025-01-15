@@ -15,6 +15,9 @@ public class GameBoard : UserControl
     private Map _map;
     private Timer _timer;
     private TurnController _controller;
+    private Model.Game _game;
+
+    public GameState GameState => _game.GameState;
 
     //create master
     public GameBoard(GameWindow gameWindow, string name, string gameName, int width, int height)
@@ -22,8 +25,8 @@ public class GameBoard : UserControl
         Focusable = true;
         _timer = new Timer(OnTimerTick, null, 0, 1000);
         _map = new Map(width, height);
-        var game = new Model.Game(gameWindow, name, gameName, _map);
-        _controller = game.GetTurnController();
+        _game = new Model.Game(gameWindow, name, gameName, _map);
+        _controller = _game.TurnController;
     }
 
     //create joiner
@@ -32,13 +35,8 @@ public class GameBoard : UserControl
         Focusable = true;
         _timer = new Timer(OnTimerTick, null, 0, 1000);
         _map = new Map(config.Config.Width, config.Config.Height);
-        var game = new Model.Game(gameWindow, playerName, gameName, config, peer, _map);
-        _controller = game.GetTurnController();
-    }
-
-    private void OnTimerTick(object? state)
-    {
-        Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Background);
+        _game = new Model.Game(gameWindow, playerName, gameName, config, peer, _map);
+        _controller = _game.TurnController;
     }
 
     public void HandleInput(Key e)
@@ -62,5 +60,10 @@ public class GameBoard : UserControl
                 context.DrawRectangle(new Pen(ViewConst.GameBrushes[_map.GetGameObject(x, y)], 1), rect);
             }
         }
+    }
+
+    private void OnTimerTick(object? state)
+    {
+        Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Background);
     }
 }

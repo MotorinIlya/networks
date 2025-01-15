@@ -24,4 +24,6 @@ public static class ViewConst
         {"Normal", NodeRole.Normal},
         {"Viewer", NodeRole.Viewer}
     };
+
+    public const int StatisticsWidth = 163;
 }

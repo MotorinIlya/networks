@@ -1,15 +1,16 @@
 using Snake.Controller;
 using Snake.Net;
 using Snake.View.Game;
-using Snake.View.Stat;
 
 namespace Snake.Model;
 
 public class Game
 {
     private GameController _gameController;
-
     private TurnController _turnController;
+
+    public TurnController TurnController => _turnController;
+    public GameState GameState => _gameController.GameState;
 
     //create master
     public Game(GameWindow gameWindow, string name, string gameName, Map map)
@@ -30,6 +31,4 @@ public class Game
         _turnController = new TurnController(_gameController.Model, peer);
         _gameController.AddPeerObservers(_turnController);
     }
-
-    public TurnController GetTurnController() => _turnController;
 }

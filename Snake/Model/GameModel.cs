@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading;
 using Avalonia.Media;
 using Snake.Net;
+using Snake.View.Game;
 
 namespace Snake.Model;
 
@@ -63,13 +64,15 @@ public class GameModel
         _gameConfig = config.Config;
     }
 
-    public void Run()
+    public void Run(GameWindow window)
     {
-        var threadRun = new Thread(RunState);
+        var threadRun = new Thread(() => {
+            RunState(window);
+        });
         threadRun.Start();
     }
 
-    private void RunState()
+    private void RunState(GameWindow window)
     {
         while (_state is null);
         var bodyMap = new int[_map.Width, _map.Height];
@@ -125,6 +128,7 @@ public class GameModel
             _map.Update(this, _state);
             _state.StateOrder++;
             SetMasterAndDeputy();
+            window.UpdateStatistics(_state);
             Thread.Sleep(_gameConfig.StateDelayMs);
         }
     }

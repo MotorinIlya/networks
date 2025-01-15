@@ -62,7 +62,7 @@ public class Peer : Observable
 
     public void SearchMulticastCopies()
     {
-        Thread receiveThread = new Thread(SearchCopies);
+        var receiveThread = new Thread(SearchCopies);
         receiveThread.Start();
 
         // Thread deleteThread = new Thread(DeleteDeactiveCopies);
@@ -123,7 +123,7 @@ public class Peer : Observable
 
                 if (msg.TypeCase != GameMessage.TypeOneofCase.Ack 
                     && msg.TypeCase != GameMessage.TypeOneofCase.Announcement)
-                {
+                { 
                     var resetEvent = new ManualResetEvent(false);
                     _pendingAcks[(msg.MsgSeq, remoteEndPoint.ToString())] = resetEvent;
 
@@ -142,7 +142,6 @@ public class Peer : Observable
                         }
                     }
                 }
-
             }
             else
             {

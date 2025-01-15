@@ -13,13 +13,18 @@ namespace Snake.Controller;
 public class GameController : Observer
 {
     private GameModel _gameModel;
-
     private Peer _peer;
-    
     private GameWindow _gameWindow;
 
+    public GameModel Model => _gameModel;
+    public Peer GamePeer => _peer;
+    public GameState GameState => _gameModel.GetState();
+
     //create master
-    public GameController(GameWindow gameWindow, string name, string gameName, Map map)
+    public GameController(GameWindow gameWindow, 
+                            string name, 
+                            string gameName, 
+                            Map map)
     {
         _gameWindow = gameWindow;
         _peer = new Peer();
@@ -43,7 +48,7 @@ public class GameController : Observer
 
     public void Run()
     {
-        _gameModel.Run();
+        _gameModel.Run(_gameWindow);
         SearchPlayers();
     }
 
@@ -57,26 +62,6 @@ public class GameController : Observer
     {
         var createMsgThread = new Thread(PeriodicCreateMsg);
         createMsgThread.Start();
-    }
-
-    private void PeriodicCreateMsg()
-    {
-        while (true)
-        {
-            var msg = CreatorMessages.CreateAnnouncementMsg(_gameModel);
-            _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort));
-
-            msg = CreatorMessages.CreateStateMsg(_gameModel);
-            foreach (var player in _gameModel.Players.Players)
-            {
-                if (player.Id != _gameModel.MainId)
-                {
-                    _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
-                }
-            }
-            
-            Thread.Sleep(NetConst.StartDelay);
-        }
     }
 
     public override void Update(GameEvent gameEvent)
@@ -99,6 +84,7 @@ public class GameController : Observer
                     }
                     else
                     {
+                        _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, msg.MsgSeq), endPoint);
                         _peer.AddMsg(CreatorMessages.CreateErrorMsg(ViewConst.ErrorMsg), endPoint);
                     }
                 }
@@ -112,6 +98,7 @@ public class GameController : Observer
                 _gameModel.UpdateMap(msg.State.State); 
                 _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, _gameModel.EndPointToId(endPoint), msg.MsgSeq), 
                                 gameEvent.IpEndPoint);
+                _gameWindow.UpdateStatistics(msg.State.State);
                 break;
             case GameMessage.TypeOneofCase.Ack:
                 _peer.AcceptAck(msg.MsgSeq, endPoint.ToString());
@@ -157,6 +144,23 @@ public class GameController : Observer
         }
     }
 
-    public GameModel Model => _gameModel;
-    public Peer GamePeer => _peer;
+    private void PeriodicCreateMsg()
+    {
+        while (true)
+        {
+            var msg = CreatorMessages.CreateAnnouncementMsg(_gameModel);
+            _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort));
+
+            msg = CreatorMessages.CreateStateMsg(_gameModel);
+            foreach (var player in _gameModel.Players.Players)
+            {
+                if (player.Id != _gameModel.MainId)
+                {
+                    _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
+                }
+            }
+            
+            Thread.Sleep(NetConst.StartDelay);
+        }
+    }
 }

@@ -17,7 +17,6 @@ public partial class JoinWindow : Window
         _peer = new Peer();
         _peer.SearchMulticastCopies();
         Thread.Sleep(NetConst.StartDelay);
-        AddGames();
     }
 
     public void AddGames()
@@ -35,7 +34,7 @@ public partial class JoinWindow : Window
             };
             button.Click += (sender, e) => {
                 var role = GetRole(PlayerRole);
-                var playerName = PlayerName.Text;
+                string playerName = PlayerName.Text is string text ? text : "Player";
                 var joinMsg = CreatorMessages.CreateJoinMsg(playerName, gameName, role);
                 _peer.AddMsg(joinMsg, endPoint);
                 var gameWindow = new GameWindow(playerName, gameName, gameMsg.Announcement.Games[0], _peer);
@@ -49,9 +48,9 @@ public partial class JoinWindow : Window
     private NodeRole GetRole(ComboBox box)
     {
         var selectedItem = PlayerRole.SelectedItem as ComboBoxItem;
-        if (selectedItem is not null)
+        if (selectedItem is not null && selectedItem.Content is string content)
         {
-            return ViewConst.StringToRole[selectedItem.Content.ToString()];
+            return ViewConst.StringToRole[content.ToString()];
         }
         else
         {

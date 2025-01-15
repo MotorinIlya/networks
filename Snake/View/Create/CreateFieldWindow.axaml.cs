@@ -15,9 +15,12 @@ public partial class CreateFieldWindow : Window
 
     public void ClickCreate(object sender, RoutedEventArgs args)
     {
-        var gameWindow = new GameWindow(Name.Text, GameName.Text, int.Parse(Width.Text), int.Parse(Height.Text));
+        var name = Name.Text is string text ? text : "Master";
+        var gameName = GameName.Text is string game ? game : "Game";
+        var width = Width.Text is string widthText ? widthText : "40";
+        var height = Height.Text is string heightText ? heightText : "30";
+        var gameWindow = new GameWindow(name, gameName, int.Parse(width), int.Parse(height));
         gameWindow.Show();
         Close();
     }
-
 }

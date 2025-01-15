@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Snake.Net;
 
 namespace Snake.View.Game;
@@ -11,13 +12,15 @@ public partial class GameWindow : Window
     //create master
     public GameWindow(string name, string gameName, int width, int height)
     {
+        InitializeComponent();
         CanResize = false;
-        Width = width * ViewConst.BlockSize;
+        Width = width * ViewConst.BlockSize + ViewConst.StatisticsWidth;
         Height = height * ViewConst.BlockSize;
         Title = "Snake";
 
         _gameBoard = new GameBoard(this, name, gameName, width, height);
-        Content = _gameBoard;
+        Grid.SetColumn(_gameBoard, 0);
+        MainGrid.Children.Add(_gameBoard);
 
         KeyDown += OnKeyDown;
     }
@@ -25,24 +28,47 @@ public partial class GameWindow : Window
     //create joiner
     public GameWindow(string playerName, string gameName, GameAnnouncement config, Peer peer)
     {
+        InitializeComponent();
         CanResize = false;
         Width = config.Config.Width * ViewConst.BlockSize;
         Height = config.Config.Height * ViewConst.BlockSize;
         Title = "Snake";
 
         _gameBoard = new GameBoard(this, playerName, gameName, config, peer);
-        Content = _gameBoard;
+        Grid.SetColumn(_gameBoard, 0);
+        MainGrid.Children.Add(_gameBoard);
 
         KeyDown += OnKeyDown;
-    }
-
-    private void OnKeyDown(object? sender, KeyEventArgs e)
-    {
-       _gameBoard.HandleInput(e.Key);
     }
 
     public void ShowError()
     {
         
+    }
+
+    public void UpdateStatistics(GameState state)
+    {
+        Dispatcher.UIThread.Post(() => {
+            Update(state);
+        });
+    }
+
+    private void Update(GameState state)
+    {
+        PlayerBoard.Children.Clear();
+        foreach (var player in state.Players.Players)
+        {
+            PlayerBoard.Children.Add(new TextBlock
+            {
+                Text = player.Name 
+                        + "(" + player.Role.ToString() + ":" + player.Id.ToString() + ") : " 
+                        + player.Score
+            });
+        }
+    }
+
+    private void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+       _gameBoard.HandleInput(e.Key);
     }
 }
