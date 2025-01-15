@@ -99,7 +99,7 @@ public class GameController : Observer
                     if (coord is not null)
                     {
                         var id = _gameModel.AddPlayer(msg.Join.PlayerName, endPoint, NodeRole.Normal, coord);
-                        _peer.AddMsg(CreatorMessages.CreateAckMsg(id, msg.MsgSeq), endPoint);
+                        _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, id, msg.MsgSeq), endPoint);
                     }
                     else
                     {
@@ -109,12 +109,12 @@ public class GameController : Observer
                 else
                 {
                     var id = _gameModel.AddViewer(msg.Join.PlayerName, endPoint);
-                    _peer.AddMsg(CreatorMessages.CreateAckMsg(id, msg.MsgSeq), endPoint);
+                    _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, id, msg.MsgSeq), endPoint);
                 }
                 break;
             case GameMessage.TypeOneofCase.State:
                 _gameModel.UpdateMap(msg.State.State); 
-                _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.EndPointToId(endPoint), msg.MsgSeq), 
+                _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, _gameModel.EndPointToId(endPoint), msg.MsgSeq), 
                                 gameEvent.IpEndPoint);
                 break;
             case GameMessage.TypeOneofCase.Ack:
@@ -125,10 +125,12 @@ public class GameController : Observer
                 }
                 break;
             case GameMessage.TypeOneofCase.Ping:
-                _peer.AcceptAck(msg.MsgSeq, endPoint.ToString());
+                var pingReceiverId = _gameModel.EndPointToId(endPoint);
+                _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, pingReceiverId, msg.MsgSeq), endPoint);
                 break;
             case GameMessage.TypeOneofCase.Error:
-                _peer.AcceptAck(msg.MsgSeq, endPoint.ToString());
+                var errorReceiverId = _gameModel.EndPointToId(endPoint);
+                _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, errorReceiverId, msg.MsgSeq), endPoint);
                 _gameWindow.Close();
                 _gameWindow.ShowError();
                 break;

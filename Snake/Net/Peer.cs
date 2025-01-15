@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -21,6 +22,8 @@ public class Peer : Observable
     private ConcurrentQueue<(GameMessage, IPEndPoint, bool)> _sendMessages;
 
     private ConcurrentDictionary<(long, string), ManualResetEvent> _pendingAcks;
+
+    private ConcurrentDictionary<int, DateTime> _lastInteraction;
 
     private MulticastSocket _multicastSocket;
 
@@ -164,6 +167,32 @@ public class Peer : Observable
         if (_pendingAcks.TryGetValue((msgSeq, ipEndPoint), out var resetEvent))
         {
             resetEvent.Set();
+        }
+    }
+
+    public void UpdateLastInteraction(int id)
+    {
+        _lastInteraction[id] = DateTime.Now;
+    }
+
+    public void CheckInactiveNodes(GameModel model)
+    {
+        while (true)
+        {
+            var timeout = TimeSpan.FromMilliseconds(_stateDelayMs * 0.8);
+            var now = DateTime.Now;
+            var inactiveNodes = _lastInteraction
+                .Where(pair => now - pair.Value > timeout)
+                .Select(pair => pair.Key)
+                .ToList();
+
+            foreach (var nodeId in inactiveNodes)
+            {
+                model.InactivePlayer(nodeId);
+                _lastInteraction.Remove(nodeId, out _);
+            }
+
+            Thread.Sleep((int)(_stateDelayMs * 0.4));
         }
     }
 

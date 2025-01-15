@@ -17,10 +17,9 @@ public class GameModel
     private Map _map;
 
     private int _playerId = 1;
-
-    private int _mainId;
-    private int _deputyId;
-    private int _masterId;
+    private int _mainId = 0;
+    private int _deputyId = 0;
+    private int _masterId = 0;
     private string _playerName;
 
     private GameState? _state;
@@ -144,6 +143,54 @@ public class GameModel
         }
     }
 
+    private void SetZombieSnake(int playerId)
+    {
+        foreach (var snake in _state.Snakes)
+        {
+            if (snake.PlayerId == playerId)
+            {
+                snake.State = GameState.Types.Snake.Types.SnakeState.Zombie;
+            }
+        }
+    }
+
+    public void InactivePlayer(int inactiveId)
+    {
+        var player = GetPlayer(inactiveId);
+        _state.Players.Players.Remove(player);
+
+        var inactiveRole = GetPlayer(inactiveId).Role;
+        if (GetMain().Role == NodeRole.Normal)
+        {
+            if (inactiveRole == NodeRole.Master)
+            {
+                _masterId = _deputyId;
+                _deputyId = 0;
+            }
+        }
+        else if (GetMain().Role == NodeRole.Master)
+        {
+            if (inactiveRole == NodeRole.Deputy)
+            {
+                SetDeputy();
+                // сообщить новому Deputy что он Deputy
+            }
+            else if (inactiveRole == NodeRole.Normal)
+            {
+                SetZombieSnake(inactiveId);
+            }
+        }
+        else if (GetMain().Role == NodeRole.Deputy)
+        {
+            if (inactiveRole == NodeRole.Master)
+            {
+                _masterId = _mainId;
+                SetDeputy();
+                // сообщить всем что я новый мастер, сообщить новому Deputy и начать игру.
+            }
+        }
+    }
+
     private GameState.Types.Snake? SearchSnake(List<GameState.Types.Snake> list, GameState.Types.Coord coord)
     {
         foreach(var snake in list)
@@ -172,7 +219,11 @@ public class GameModel
         snake.Points.Insert(1, MConst.OppositeDirectionCoord[snake.HeadDirection]);
         CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
         CoordUtils.NormalizeForMap(snake.Points[0], _gameConfig.Width, _gameConfig.Height);
-        GetPlayer(snake.PlayerId).Score++;
+        if (HasPlayer(snake.PlayerId))
+        {
+            GetPlayer(snake.PlayerId).Score++;
+        }
+        
     }
 
     private void Move(GameState.Types.Snake snake)
@@ -279,18 +330,6 @@ public class GameModel
         }
     }
 
-    public GamePlayer? GetMaster()
-    {
-        foreach (var player in _state.Players.Players)
-        {
-            if (player.Role == NodeRole.Master)
-            {
-                return player;
-            }
-        }
-        return null;
-    }
-
     public GamePlayer? GetPlayer(int id)
     {
         foreach (var player in _state.Players.Players)
@@ -301,6 +340,18 @@ public class GameModel
             }
         }
         return null;
+    }
+
+    public bool HasPlayer(int id)
+    {
+        foreach (var player in _state.Players.Players)
+        {
+            if (player.Id == id)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public GameState.Types.Snake? GetSnake(int id)
@@ -338,17 +389,24 @@ public class GameModel
         //search and create deputy
         if (!HasDeputy)
         {
-            foreach (var player in _state.Players.Players)
+            SetDeputy();
+        }
+    }
+
+    private void SetDeputy()
+    {
+        foreach (var player in _state.Players.Players)
+        {
+            if (player.Role == NodeRole.Normal)
             {
-                if (player.Role == NodeRole.Normal)
-                {
-                    player.Role = NodeRole.Deputy;
-                    
-                }
+                player.Role = NodeRole.Deputy;
+                break;
             }
         }
     }
 
+    public GamePlayer? GetMaster() => GetPlayer(_masterId);
+    public GamePlayer GetMain() => GetPlayer(_mainId);
     public void SetId(int id) => _mainId = id;
     public GameState GetState() => _state;
     public GamePlayers Players => _state.Players;

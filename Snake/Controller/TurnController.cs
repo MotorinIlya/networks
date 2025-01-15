@@ -26,7 +26,7 @@ public class TurnController(GameModel gameModel, Peer peer) : Observer
         {
             case GameMessage.TypeOneofCase.Steer:
                 _model.ChangeDirection(msg.Steer.Direction, endPoint);
-                _peer.AddMsg(CreatorMessages.CreateAckMsg(_model.EndPointToId(endPoint), msg.MsgSeq), endPoint);
+                _peer.AddMsg(CreatorMessages.CreateAckMsg(_model.MainId, _model.EndPointToId(endPoint), msg.MsgSeq), endPoint);
                 break;
         }
     }

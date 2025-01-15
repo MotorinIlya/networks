@@ -122,12 +122,13 @@ public static class CreatorMessages
         return msg;
     }
 
-    public static GameMessage CreateAckMsg(int receiverId, long msgSeq)
+    public static GameMessage CreateAckMsg(int senderId, int receiverId, long msgSeq)
     {
         var ackMsg = new GameMessage.Types.AckMsg();
         var msg = new GameMessage()
         {
             Ack = ackMsg,
+            SenderId = senderId,
             ReceiverId = receiverId,
             MsgSeq = msgSeq
         };
