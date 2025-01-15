@@ -9,6 +9,7 @@ public partial class CreateFieldWindow : Window
 {
     public CreateFieldWindow()
     {
+        CanResize = false;
         InitializeComponent();
     }
 

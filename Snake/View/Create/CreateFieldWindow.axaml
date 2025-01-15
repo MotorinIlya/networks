@@ -2,36 +2,86 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
         x:Class="Snake.View.Create.CreateFieldWindow"
         Title="Snake"
         Width="400"
-        Height="400">
+        Height="400"
+        Background="DarkGreen">
+    
     <StackPanel Orientation="Vertical">
-        <StackPanel Width="200" 
-                    Orientation="Horizontal"
+        <TextBlock Text="Game config"
+                HorizontalAlignment="Center"
+                Margin="16"
+                FontSize="30"
+                Foreground="AntiqueWhite"/>
+        <StackPanel Orientation="Vertical"
+                    HorizontalAlignment="Center">
+            <StackPanel.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="Foreground"
+                            Value="AntiqueWhite"/>
+                    <Setter Property="FontSize"
+                            Value="18"/>
+                </Style>
+                <Style Selector="TextBox">
+                    <Setter Property="Margin"
+                            Value="5"/>
+                </Style>
+            </StackPanel.Styles>
+            <Grid Width="300" 
                     Margin="20">
-            <TextBlock Text="Name"/>
-            <TextBox x:Name="Name"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/> 
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Name" 
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Grid.Row="0" Grid.Column="0"/>
+                <TextBox x:Name="Name"
+                        VerticalAlignment="Center"
+                        Grid.Row="0" Grid.Column="1"/>
+
+                <TextBlock Text="Game Name" 
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Grid.Row="1" Grid.Column="0"/>
+                <TextBox x:Name="GameName"
+                        VerticalAlignment="Center"
+                        Grid.Row="1" Grid.Column="1"/>
+
+                <TextBlock Text="Width(10-100)" 
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Grid.Row="2" Grid.Column="0"/>
+                <TextBox x:Name="Width"
+                        VerticalAlignment="Center"
+                        Grid.Row="2" Grid.Column="1"/>
+
+                <TextBlock Text="Height(10-100)" 
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Grid.Row="3" Grid.Column="0"/>
+                <TextBox x:Name="Height"
+                        VerticalAlignment="Center"
+                        Grid.Row="3" Grid.Column="1"/>
+            </Grid>
+
+            <Button Click="ClickCreate" 
+                    HorizontalAlignment="Center"
+                    Margin="0 10 0 0"
+                    Width="100"
+                    HorizontalContentAlignment="Center"
+                    Foreground="AntiqueWhite"
+                    Background="Green">Start</Button>
         </StackPanel>
-        <StackPanel Width="200" 
-                    Orientation="Horizontal"
-                    Margin="20">
-            <TextBlock Text="GameName"/>
-            <TextBox x:Name="GameName"/>
-        </StackPanel>
-        <StackPanel Width="200" 
-                    Orientation="Horizontal"
-                    Margin="20">
-            <TextBlock Text="Width(10-100)"/>
-            <TextBox x:Name="Width"/>
-        </StackPanel>
-        <StackPanel Width="200" 
-                    Orientation="Horizontal"
-                    Margin="20">
-            <TextBlock Text="Height(10-100)"/>
-            <TextBox x:Name="Height"/>
-        </StackPanel>
-        <Button Click="ClickCreate">Start</Button>
     </StackPanel>
 </Window>

@@ -12,6 +12,7 @@ public partial class JoinWindow : Window
     private Peer _peer;
     public JoinWindow()
     {
+        CanResize = false;
         InitializeComponent();
         _peer = new Peer();
         _peer.SearchMulticastCopies();

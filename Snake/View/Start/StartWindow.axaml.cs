@@ -10,6 +10,7 @@ public partial class StartWindow : Window
 {
     public StartWindow()
     {
+        CanResize = false;
         InitializeComponent();
     }
 

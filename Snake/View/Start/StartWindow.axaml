@@ -2,17 +2,50 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="250"
         x:Class="Snake.View.Start.StartWindow"
         Title="Snake"
         Width="400"
-        Height="200">
+        Height="300"
+        Background="DarkGreen">
+
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="FontSize" 
+                    Value="15"/>
+            <Setter Property="Background"
+                    Value="LightGreen"/>
+            <Setter Property="Margin"
+                    Value="10"/>
+        </Style>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize"
+                    Value="30"/>
+            <Setter Property="Foreground"
+                    Value="AntiqueWhite"/>
+        </Style>
+    </Window.Styles>
     <StackPanel Width="200" 
                 Orientation="Vertical"
                 Margin="20">
-        <TextBlock Text="Snake"/>
-        <Button Click="ClickCreateGame">CreateGame</Button>
-        <Button Click="ClickJoinGame">JoinGame</Button>
-        <Button Click="ClickExit">Exit</Button>
+        <TextBlock Text="Snake"
+                HorizontalAlignment="Center"
+                Margin="5"/>
+        <Button Click="ClickCreateGame"
+                Content="Start"
+                HorizontalAlignment="Center"
+                Width="100"
+                HorizontalContentAlignment="Center"/>
+        <Button Click="ClickJoinGame"
+                Content="Join"
+                HorizontalAlignment="Center"
+                Width="100"
+                HorizontalContentAlignment="Center"/>
+        <Button Click="ClickExit"
+                Content="Exit"
+                HorizontalAlignment="Center"
+                Width="100"
+                HorizontalContentAlignment="Center"/>
     </StackPanel>
 </Window>

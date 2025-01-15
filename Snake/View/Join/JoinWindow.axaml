@@ -2,29 +2,74 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
         x:Class="Snake.View.Join.JoinWindow"
         Title="Snake"
         Width="400"
-        Height="200">
-    <StackPanel Orientation="Vertical">
-        <TextBlock Text="Games"/>
-        <StackPanel Orientation="Horizontal"
-                    Margin="20">
-            <TextBlock Text="Name"/>
-            <TextBox x:Name="PlayerName"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal"
-                    Margin="20">
-            <TextBlock Text="Role"/>
-            <ComboBox x:Name="PlayerRole">
+        Height="200"
+        Background="DarkGreen">
+    <StackPanel Orientation="Vertical"
+            HorizontalAlignment="Center">
+        <TextBlock Text="Games"
+                Margin="16"
+                FontSize="30"
+                Foreground="AntiqueWhite"
+                HorizontalAlignment="Center"/>
+        <Grid Width="400">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="VerticalAlignment"
+                            Value="Center"/>
+                    <Setter Property="HorizontalAlignment"
+                            Value="Center"/>
+                    <Setter Property="Foreground"
+                            Value="AntiqueWhite"/>
+                    <Setter Property="FontSize"
+                            Value="18"/>
+                </Style>
+                <Style Selector="TextBox">
+                    <Setter Property="VerticalAlignment"
+                            Value="Center"/>
+                    <Setter Property="HorizontalAlignment"
+                            Value="Left"/>
+                    <Setter Property="Width"
+                            Value="150"/>
+                    <Setter Property="Margin"
+                            Value="0 0 0 0"/>
+                </Style>
+                <Style Selector="ComboBox">
+                    <Setter Property="VerticalAlignment"
+                            Value="Center"/>
+                    <Setter Property="Width"
+                            Value="150"/>
+                </Style>
+            </Grid.Styles>
+
+            <TextBlock Text="Name"
+                    Grid.Row="0" Grid.Column="0"/>
+            <TextBlock Text="Role"
+                    Grid.Row="1" Grid.Column="0"/>
+            <TextBox x:Name="PlayerName"
+                    Grid.Row="0" Grid.Column="1"/>
+            <ComboBox x:Name="PlayerRole"
+                    Grid.Row="1" Grid.Column="1">
                 <ComboBoxItem>Normal</ComboBoxItem>
                 <ComboBoxItem>Viewer</ComboBoxItem>
             </ComboBox>
-        </StackPanel>
-        <StackPanel Width="200" 
-                    Orientation="Vertical"
-                    Margin="20"
-                    x:Name="games"/>
+            <StackPanel Width="200" 
+                        Orientation="Vertical"
+                        Margin="20"
+                        x:Name="games"/>
+        </Grid>
     </StackPanel>
 </Window>
