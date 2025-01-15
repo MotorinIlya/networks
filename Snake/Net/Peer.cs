@@ -35,8 +35,6 @@ public class Peer : Observable
 
     private int _stateDelayMs = NetConst.StartDelay;
 
-    private DateTime _lastTimeMasterMsg;
-
     public Peer()
     {
         //_activeCopies = [];
@@ -106,7 +104,8 @@ public class Peer : Observable
     //     }
     // }
 
-    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => _sendMessages.Enqueue((msg, remoteEndPoint, false));
+    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => 
+                                        _sendMessages.Enqueue((msg, remoteEndPoint, false));
 
     public async void SendMsg()
     {
@@ -120,6 +119,7 @@ public class Peer : Observable
                 var repeat = message.Item3;
                 var buffer = msg.ToByteArray();
                 _unicastSocket.Send(buffer, buffer.Length, remoteEndPoint);
+                //UpdateLastInteraction()
 
                 if (msg.TypeCase != GameMessage.TypeOneofCase.Ack 
                     && msg.TypeCase != GameMessage.TypeOneofCase.Announcement)
@@ -159,6 +159,7 @@ public class Peer : Observable
             var buffer = _unicastSocket.Receive(ref remoteEndPoint);
             var message = GameMessage.Parser.ParseFrom(buffer);
             Update(new GameEvent(message, remoteEndPoint));
+            //UpdateLastInteraction();
         }
     }
 

@@ -1,6 +1,7 @@
 using Snake.Controller;
 using Snake.Net;
 using Snake.View.Game;
+using Snake.View.Stat;
 
 namespace Snake.Model;
 
@@ -18,6 +19,8 @@ public class Game
         _gameController.AddPeerObservers(_turnController);
         _gameController.Run();
         _gameController.SearchPlayers();
+        // var statWindow = new StatWindow(_gameController.Model.Players, _gameController.Model.StateDelayMs);
+        // statWindow.Show();
     }
 
     //create joiner

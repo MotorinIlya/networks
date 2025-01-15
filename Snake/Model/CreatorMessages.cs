@@ -17,7 +17,10 @@ public static class CreatorMessages
         return msg;
     }
 
-    public static GameMessage CreateRoleChangeMsg(NodeRole sender, NodeRole receiver)
+    public static GameMessage CreateRoleChangeMsg(NodeRole sender, 
+                                                    NodeRole receiver, 
+                                                    int senderId, 
+                                                    int receiverId)
     {
         var roleChangeMsg = new GameMessage.Types.RoleChangeMsg
         {
@@ -27,13 +30,18 @@ public static class CreatorMessages
         var msg = new GameMessage()
         {
             RoleChange = roleChangeMsg,
-            MsgSeq = _msgSeq
+            MsgSeq = _msgSeq,
+            SenderId = senderId,
+            ReceiverId = receiverId
         };
         _msgSeq++;
         return msg;
     }
 
-    public static GameMessage CreateRoleChangeMsg(MConst.RoleChange roleChange, NodeRole nodeRole)
+    public static GameMessage CreateRoleChangeMsg(MConst.RoleChange roleChange, 
+                                                    NodeRole nodeRole, 
+                                                    int senderId, 
+                                                    int receiverId)
     {
         GameMessage.Types.RoleChangeMsg roleChangeMsg;
         if (roleChange == MConst.RoleChange.Sender)
@@ -53,10 +61,29 @@ public static class CreatorMessages
         var msg = new GameMessage()
         {
             RoleChange = roleChangeMsg,
-            MsgSeq = _msgSeq
+            MsgSeq = _msgSeq,
+            SenderId = senderId,
+            ReceiverId = receiverId
         };
         _msgSeq++;
         return msg;
+    }
+
+    public static void CreateForAllRoleChangeMsg(Peer peer, GameModel model, int senderId, int deputyId)
+    {
+        foreach (var player in model.Players.Players)
+        {
+            if (player.Id == deputyId)
+            {
+                var msg = CreateRoleChangeMsg(NodeRole.Master, NodeRole.Deputy, senderId, deputyId);
+                peer.AddMsg(msg, model.GetEndPoint(player.Id));
+            }
+            else
+            {
+            var msg = CreateRoleChangeMsg(MConst.RoleChange.Sender, NodeRole.Master, senderId, player.Id);
+            peer.AddMsg(msg, model.GetEndPoint(player.Id));
+            }
+        }
     }
     
     public static GameMessage CreateSteerMsg(Direction direction)

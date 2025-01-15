@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using Avalonia.Media;
 using Snake.Net;
 
 namespace Snake.Model;
 
 public class GameModel
 {
+    private Peer _peer;
     private Dictionary<IPEndPoint, int> _endPointToId = [];
 
     private GameConfig _gameConfig;
@@ -29,8 +31,9 @@ public class GameModel
     private int _lastOrderState = 0;
 
     //create master
-    public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint)
+    public GameModel(Peer peer, string playerName, string gameName, Map map, IPEndPoint endPoint)
     {
+        _peer = peer;
         _map = map;
         _playerName = playerName;
         _gameName = gameName;
@@ -47,11 +50,13 @@ public class GameModel
             Height = _map.Height,
         };
         _nodeRole = NodeRole.Master;
+        _masterId = _mainId;
     }
 
     //create joiner
-    public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
+    public GameModel(Peer peer, string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
     {
+        _peer = peer;
         _map = map;
         _playerName = playerName;
         _gameName = gameName;
@@ -69,7 +74,7 @@ public class GameModel
         while (_state is null);
         var bodyMap = new int[_map.Width, _map.Height];
         var snakeList = new List<GameState.Types.Snake>();
-        while (true)
+        while (_nodeRole == NodeRole.Master)
         {
             Array.Clear(bodyMap);
             snakeList.Clear();
@@ -119,6 +124,7 @@ public class GameModel
             }
             _map.Update(this, _state);
             _state.StateOrder++;
+            SetMasterAndDeputy();
             Thread.Sleep(_gameConfig.StateDelayMs);
         }
     }
@@ -134,13 +140,14 @@ public class GameModel
 
     private void DeletePlayer(int gameId)
     {
-        foreach (var player in _state.Players.Players)
+        if (gameId == _mainId && _mainId == _masterId)
         {
-            if (player.Id == gameId)
-            {
-                player.Role = NodeRole.Viewer;
-            }
+            var msg = CreatorMessages.CreateRoleChangeMsg(NodeRole.Viewer, NodeRole.Master, _mainId, _deputyId);
+            _peer.AddMsg(msg, GetEndPoint(_deputyId));
         }
+        var player = GetPlayer(gameId);
+        _nodeRole = NodeRole.Viewer;
+        player.Role = NodeRole.Viewer;
     }
 
     private void SetZombieSnake(int playerId)
@@ -172,21 +179,25 @@ public class GameModel
         {
             if (inactiveRole == NodeRole.Deputy)
             {
-                SetDeputy();
-                // сообщить новому Deputy что он Deputy
+                var playerId = SetDeputy();
+                if (playerId != 0)
+                {
+                    var msg = CreatorMessages.CreateRoleChangeMsg(MConst.RoleChange.Receiver, 
+                                                                    NodeRole.Deputy, 
+                                                                    _mainId, 
+                                                                    playerId);
+                    _peer.AddMsg(msg, GetEndPoint(playerId));
+                }
             }
-            else if (inactiveRole == NodeRole.Normal)
-            {
-                SetZombieSnake(inactiveId);
-            }
+            SetZombieSnake(inactiveId);
         }
         else if (GetMain().Role == NodeRole.Deputy)
         {
             if (inactiveRole == NodeRole.Master)
             {
                 _masterId = _mainId;
-                SetDeputy();
-                // сообщить всем что я новый мастер, сообщить новому Deputy и начать игру.
+                var id = SetDeputy();
+                CreatorMessages.CreateForAllRoleChangeMsg(_peer, this, _mainId, id);
             }
         }
     }
@@ -219,10 +230,7 @@ public class GameModel
         snake.Points.Insert(1, MConst.OppositeDirectionCoord[snake.HeadDirection]);
         CoordUtils.Sum(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
         CoordUtils.NormalizeForMap(snake.Points[0], _gameConfig.Width, _gameConfig.Height);
-        if (HasPlayer(snake.PlayerId))
-        {
-            GetPlayer(snake.PlayerId).Score++;
-        }
+        GetPlayer(snake.PlayerId).Score++;
         
     }
 
@@ -393,16 +401,44 @@ public class GameModel
         }
     }
 
-    private void SetDeputy()
+    public int SetDeputy()
     {
         foreach (var player in _state.Players.Players)
         {
             if (player.Role == NodeRole.Normal)
             {
                 player.Role = NodeRole.Deputy;
-                break;
+                return player.Id;
             }
         }
+        return 0;
+    }
+
+    public void SetMaster(int id)
+    {
+        _masterId = id;
+        GetPlayer(id).Role = NodeRole.Master;
+    }
+
+    public void SetRole(NodeRole newRole)
+    {
+        _nodeRole = newRole;
+        GetMain().Role = newRole;
+        if (newRole == NodeRole.Master)
+        {
+            _masterId = _mainId;
+
+        }
+        else if (newRole == NodeRole.Deputy)
+        {
+            _deputyId = _mainId;
+        }
+    }
+
+    public IPEndPoint GetEndPoint(int id)
+    {
+        var player = GetPlayer(id);
+        return new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port);
     }
 
     public GamePlayer? GetMaster() => GetPlayer(_masterId);

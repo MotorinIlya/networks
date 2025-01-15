@@ -23,7 +23,7 @@ public class GameController : Observer
     {
         _gameWindow = gameWindow;
         _peer = new Peer();
-        _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint);
+        _gameModel = new GameModel(_peer, name, gameName, map, _peer.IpEndPoint);
         _peer.AddDelay(_gameModel.StateDelayMs);
     }
 
@@ -37,13 +37,14 @@ public class GameController : Observer
     {
         _gameWindow = gameWindow;
         _peer = peer;
-        _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config);
+        _gameModel = new GameModel(_peer, playerName, gameName, map, peer.IpEndPoint, config);
         _peer.AddDelay(_gameModel.StateDelayMs);
     }
 
     public void Run()
     {
         _gameModel.Run();
+        SearchPlayers();
     }
 
     public void AddPeerObservers(TurnController turnController)
@@ -56,11 +57,6 @@ public class GameController : Observer
     {
         var createMsgThread = new Thread(PeriodicCreateMsg);
         createMsgThread.Start();
-    }
-
-    public void Join()
-    {
-        _peer.SearchMulticastCopies();
     }
 
     private void PeriodicCreateMsg()
@@ -138,6 +134,25 @@ public class GameController : Observer
                 _peer.AddMsg(CreatorMessages.CreateAnnouncementMsg(_gameModel), endPoint);
                 break;
             case GameMessage.TypeOneofCase.RoleChange:
+                if (msg.RoleChange.HasReceiverRole)
+                {
+                    if (msg.RoleChange.ReceiverRole == NodeRole.Master)
+                    {
+                        var id = _gameModel.SetDeputy();
+                        CreatorMessages.CreateForAllRoleChangeMsg(_peer, _gameModel, _gameModel.MainId, id);
+                        Run();
+                    }
+                    _gameModel.SetRole(msg.RoleChange.ReceiverRole);
+                }
+
+                if (msg.RoleChange.HasSenderRole)
+                {
+                    if (msg.RoleChange.SenderRole == NodeRole.Master)
+                    {
+                        _gameModel.SetMaster(msg.SenderId);
+                    }
+                }
+                _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, msg.ReceiverId, msg.MsgSeq), endPoint);
                 break;
         }
     }
