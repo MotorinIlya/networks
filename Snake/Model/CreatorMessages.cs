@@ -103,7 +103,7 @@ public static class CreatorMessages
     
     public static GameMessage CreateStateMsg(GameModel model)
     {
-        var gameState = model.GetState();
+        var gameState = model.State;
         var stateMsg = new GameMessage.Types.StateMsg
         {
             State = gameState,

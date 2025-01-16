@@ -11,18 +11,12 @@ namespace Snake.Model;
 
 public class GameModel : Observable
 {
-    private Peer _peer;
-    private Dictionary<IPEndPoint, int> _endPointToId = [];
     private GameConfig _gameConfig;
-    private string _gameName = "sss";
+    private GameState _state;
     private Map _map;
+    private string _gameName = "sss";
     private int _playerId = 1;
     private int _mainId = 0;
-    private int _deputyId = 0;
-    private int _masterId = 0;
-    private string _playerName;
-    private GameState _state;
-    private NodeRole _nodeRole;
     private int _lastOrderState = 0;
     private bool _isRun = false;
 
@@ -30,48 +24,36 @@ public class GameModel : Observable
 
     public GamePlayers Players => _state.Players;
     public GameConfig Config => _gameConfig;
-    public string MainName => _playerName;
+    public GameState State => _state;
     public int MainId => _mainId;
     public string GameName => _gameName;
     public Map GameMap => _map;
-    public NodeRole Role => _nodeRole;
-    public int StateDelayMs => _gameConfig.StateDelayMs;
-    public GamePlayer GetMaster() => GetPlayer(_masterId);
-    public GamePlayer GetMain() => GetPlayer(_mainId);
-    public void SetId(int id) => _mainId = id;
-    public GameState GetState() => _state;
-
+    public NodeRole Role => GetPlayer(_mainId).Role;
 
 
     //create master
-    public GameModel(Peer peer, string playerName, string gameName, Map map, IPEndPoint endPoint)
+    public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint)
     {
-        _peer = peer;
         _map = map;
-        _playerName = playerName;
         _gameName = gameName;
         _state = new GameState()
         {
             StateOrder = _lastOrderState,
             Players = new GamePlayers()
         };
-        AddPlayer(_playerName, endPoint, NodeRole.Master, MConst.StartSnakeHead);
+        AddPlayer(playerName, endPoint, NodeRole.Master, MConst.StartSnakeHead);
         _mainId = _state.Players.Players[0].Id;
         _gameConfig = new GameConfig()
         {
             Width = _map.Width,
             Height = _map.Height,
         };
-        _nodeRole = NodeRole.Master;
-        _masterId = _mainId;
     }
 
     //create joiner
-    public GameModel(Peer peer, string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
+    public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
     {
-        _peer = peer;
         _map = map;
-        _playerName = playerName;
         _gameName = gameName;
         _gameConfig = config.Config;
         _state = new GameState()
@@ -79,6 +61,64 @@ public class GameModel : Observable
             StateOrder = _lastOrderState
         };
     }
+
+
+    public GamePlayer GetMain() => GetPlayer(_mainId);
+    public GamePlayer GetMaster() => GetPlayer(NodeRole.Master) is GamePlayer player 
+                                    ? player
+                                    : throw new Exception(); 
+
+    public GamePlayer? GetDeputy() => GetPlayer(NodeRole.Deputy) is GamePlayer player
+                                    ? player
+                                    : null;
+    public IPEndPoint GetEndPoint(int id)
+    {
+        var player = GetPlayer(id);
+        return new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port);
+    }
+
+    public int EndPointToId(IPEndPoint endPoint)
+    {
+        var address = endPoint.Address.ToString();
+        var port = endPoint.Port;
+        if (_state is GameState state)
+        {
+            foreach (var player in _state.Players.Players)
+            {
+                if ((string.Compare(player.IpAddress, address) == 0) && (player.Port == port))
+                {
+                    return player.Id;
+                }
+            }
+        }
+        throw new Exception();
+    }
+
+    public GamePlayer GetPlayer(int id)
+    {
+        foreach (var player in Players.Players)
+        {
+            if (player.Id == id)
+            {
+                return player;
+            }
+        }
+        throw new Exception();
+    }
+
+    public GamePlayer? GetPlayer(NodeRole role)
+    {
+        foreach (var player in Players.Players)
+        {
+            if (player.Role == role)
+            {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    public void SetId(int id) => _mainId = id;
 
 
 
@@ -145,60 +185,22 @@ public class GameModel : Observable
             }
             _map.Update(this, _state);
             _state.StateOrder++;
-            SetMasterAndDeputy();
             window.UpdateStatistics(_state);
+            SearchDeputy();
             Thread.Sleep(_gameConfig.StateDelayMs);
-        }
-    }
-
-    private void Die(GameState.Types.Snake? snake)
-    {
-        if (snake is not null)
-        {
-            DeletePlayer(snake.PlayerId);
-            _state.Snakes.Remove(snake);
-        }
-    }
-
-    private void DeletePlayer(int gameId)
-    {
-        if (gameId == _mainId && _mainId == _masterId)
-        {
-            var msg = CreatorMessages.CreateRoleChangeMsg(NodeRole.Viewer, NodeRole.Master, _mainId, _deputyId);
-            _peer.AddMsg(msg, GetEndPoint(_deputyId));
-            _nodeRole = NodeRole.Viewer;
-            _isRun = false;
-            Update(new ModelEvent(ModelAction.Stop));
-        }
-        _masterId = _deputyId;
-        _deputyId = 0;
-        var player = GetPlayer(gameId);
-        player.Role = NodeRole.Viewer;
-    }
-
-    private void SetZombieSnake(int playerId)
-    {
-        foreach (var snake in _state.Snakes)
-        {
-            if (snake.PlayerId == playerId)
-            {
-                snake.State = GameState.Types.Snake.Types.SnakeState.Zombie;
-            }
         }
     }
 
     public void InactivePlayer(int inactiveId)
     {
         var player = GetPlayer(inactiveId);
-        _state.Players.Players.Remove(player);
+        var inactiveRole = player.Role;
 
-        var inactiveRole = GetPlayer(inactiveId).Role;
         if (GetMain().Role == NodeRole.Normal)
         {
             if (inactiveRole == NodeRole.Master)
             {
-                _masterId = _deputyId;
-                _deputyId = 0;
+                GetDeputy().Role = NodeRole.Master;
             }
         }
         else if (GetMain().Role == NodeRole.Master)
@@ -208,11 +210,7 @@ public class GameModel : Observable
                 var playerId = SetDeputy();
                 if (playerId != 0)
                 {
-                    var msg = CreatorMessages.CreateRoleChangeMsg(MConst.RoleChange.Receiver, 
-                                                                    NodeRole.Deputy, 
-                                                                    _mainId, 
-                                                                    playerId);
-                    _peer.AddMsg(msg, GetEndPoint(playerId));
+                    Update(new ModelEvent(ModelAction.SendRoleMsgRecvDeputy, playerId));
                 }
             }
             SetZombieSnake(inactiveId);
@@ -221,11 +219,112 @@ public class GameModel : Observable
         {
             if (inactiveRole == NodeRole.Master)
             {
-                _masterId = _mainId;
                 var id = SetDeputy();
-                CreatorMessages.CreateForAllRoleChangeMsg(_peer, this, _mainId, id);
+                GetMain().Role = NodeRole.Master;
+                Update(new ModelEvent(ModelAction.SendRoleMsgSendMaster, id));
             }
         }
+        _state.Players.Players.Remove(player);
+    }
+
+
+
+    public int AddPlayer(string name, IPEndPoint endPoint, NodeRole role, GameState.Types.Coord head)
+    {
+        var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, role);
+        _state.Players.Players.Add(player);
+        var snake = new GameState.Types.Snake
+        {
+            PlayerId = player.Id,
+            State = GameState.Types.Snake.Types.SnakeState.Alive,
+            HeadDirection = Direction.Right
+        };
+        snake.Points.Add(head);
+        snake.Points.Add(MConst.Left);
+        _state.Snakes.Add(snake);
+
+        return player.Id;
+    }
+
+    public int AddViewer(string name, IPEndPoint endPoint)
+    {
+        var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, NodeRole.Viewer);
+        _state.Players.Players.Add(player);
+        return player.Id;
+    }
+
+    public void UpdateMap(GameState state)
+    {
+        if (state.StateOrder > _lastOrderState)
+        {
+            _lastOrderState = state.StateOrder;
+            _state = state;
+            _map.Update(this, state);
+        }
+    }
+
+    public void ChangeDirection(Direction newDirection, int playerId)
+    {
+        foreach(var snake in _state.Snakes)
+        {
+            if (snake.PlayerId == playerId)
+            {
+                snake.HeadDirection = newDirection;
+                return;
+            }
+        }
+    }
+
+    public void ChangeDirection(Direction newDirection, IPEndPoint endPoint)
+    {
+        string ipAddres = endPoint.Address.ToString();
+        int port = endPoint.Port;
+        foreach (var player in _state.Players.Players)
+        {
+            if (ipAddres == player.IpAddress && port == player.Port)
+            {
+                ChangeDirection(newDirection, player.Id);
+                return;
+            }
+        }
+    }
+
+    public GameState.Types.Snake GetSnake(int id)
+    {
+        foreach (var snake in _state.Snakes)
+        {
+            if (snake.PlayerId == id)
+            {
+                return snake;
+            }
+        }
+        throw new Exception();
+    }
+
+    public int SetDeputy()
+    {
+        foreach (var player in _state.Players.Players)
+        {
+            if (player.Role == NodeRole.Normal)
+            {
+                player.Role = NodeRole.Deputy;
+                return player.Id;
+            }
+        }
+        return 0;
+    }
+
+    public void SetOtherRole(int id, NodeRole nodeRole)
+    {
+        if (GetPlayer(id) is GamePlayer player)
+        {
+            player.Role = nodeRole;
+        }
+    }
+
+    public void SetRole(NodeRole newRole)
+    {
+        GetMain().Role = newRole;
     }
 
     private GameState.Types.Snake? SearchSnake(List<GameState.Types.Snake> list, GameState.Types.Coord coord)
@@ -301,193 +400,48 @@ public class GameModel : Observable
         return player;
     }
 
-    public int AddPlayer(string name, IPEndPoint endPoint, NodeRole role, GameState.Types.Coord head)
+    private void Die(GameState.Types.Snake? snake)
     {
-        var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, role);
-        _endPointToId[endPoint] = player.Id;
-        _state.Players.Players.Add(player);
-        var snake = new GameState.Types.Snake
+        if (snake is not null)
         {
-            PlayerId = player.Id,
-            State = GameState.Types.Snake.Types.SnakeState.Alive,
-            HeadDirection = Direction.Right
-        };
-        snake.Points.Add(head);
-        snake.Points.Add(MConst.Left);
-        _state.Snakes.Add(snake);
-
-        return player.Id;
-    }
-
-    public int AddViewer(string name, IPEndPoint endPoint)
-    {
-        var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, NodeRole.Viewer);
-        _endPointToId[endPoint] = player.Id;
-        _state.Players.Players.Add(player);
-        return player.Id;
-    }
-
-    public void UpdateMap(GameState state)
-    {
-        if (state.StateOrder > _lastOrderState)
-        {
-            _lastOrderState = state.StateOrder;
-            _state = state;
-            _map.Update(this, state);
-            SetMasterAndDeputy();
+            DeletePlayer(snake.PlayerId);
+            _state.Snakes.Remove(snake);
         }
     }
 
-    public void ChangeDirection(Direction newDirection, int playerId)
+    private void DeletePlayer(int gameId)
     {
-        foreach(var snake in _state.Snakes)
+        if (gameId == _mainId && _mainId == GetMaster().Id)
         {
-            if (snake.PlayerId == playerId)
-            {
-                snake.HeadDirection = newDirection;
-                return;
-            }
+            Update(new ModelEvent(ModelAction.SendRoleMsgViewerMaster, GetDeputy().Id));
+            _isRun = false;
+            Update(new ModelEvent(ModelAction.Stop, 0));
         }
+        var player = GetPlayer(gameId);
+        player.Role = NodeRole.Viewer;
     }
 
-    public void ChangeDirection(Direction newDirection, IPEndPoint endPoint)
-    {
-        string ipAddres = endPoint.Address.ToString();
-        int port = endPoint.Port;
-        foreach (var player in _state.Players.Players)
-        {
-            if (ipAddres == player.IpAddress && port == player.Port)
-            {
-                ChangeDirection(newDirection, player.Id);
-                return;
-            }
-        }
-    }
-
-    public GamePlayer GetPlayer(int id)
-    {
-        if (_state is GameState state)
-        {
-            foreach (var player in _state.Players.Players)
-            {
-                if (player.Id == id)
-                {
-                    return player;
-                }
-            }
-        }
-        throw new Exception();
-    }
-
-    public bool HasPlayer(int id)
-    {
-        foreach (var player in _state.Players.Players)
-        {
-            if (player.Id == id)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public GameState.Types.Snake GetSnake(int id)
+    private void SetZombieSnake(int playerId)
     {
         foreach (var snake in _state.Snakes)
         {
-            if (snake.PlayerId == id)
+            if (snake.PlayerId == playerId)
             {
-                return snake;
-            }
-        }
-        throw new Exception();
-    }
-
-    public void SetMasterAndDeputy()
-    {
-        foreach (var player in _state.Players.Players)
-        {
-            if (player.Id == _mainId)
-            {
-                _nodeRole = player.Role;
-            }
-            if (player.Role == NodeRole.Master)
-            {
-                _masterId = player.Id;
-            }
-            if (player.Role == NodeRole.Deputy)
-            {
-                _deputyId = player.Id;
+                snake.State = GameState.Types.Snake.Types.SnakeState.Zombie;
             }
         }
     }
 
-    public int SetDeputy()
+    private void SearchDeputy()
     {
-        foreach (var player in _state.Players.Players)
+        // if not found deputy
+        if (GetDeputy() is null)
         {
-            if (player.Role == NodeRole.Normal)
+            // if we have normal
+            if (GetPlayer(NodeRole.Normal) is GamePlayer player)
             {
                 player.Role = NodeRole.Deputy;
-                return player.Id;
             }
         }
-        return 0;
-    }
-
-    public void SetMaster(int id, GamePlayer player)
-    {
-        _masterId = id;
-        player.Role = NodeRole.Master;
-    }
-
-    public void SetOtherRole(int id, NodeRole nodeRole)
-    {
-        if (GetPlayer(id) is GamePlayer player)
-        {
-            if (nodeRole == NodeRole.Master)
-            {
-                _masterId = id;
-            }
-            player.Role = nodeRole;
-        }
-    }
-
-    public void SetRole(NodeRole newRole)
-    {
-        _nodeRole = newRole;
-        GetMain().Role = newRole;
-        if (newRole == NodeRole.Master)
-        {
-            _masterId = _mainId;
-
-        }
-        else if (newRole == NodeRole.Deputy)
-        {
-            _deputyId = _mainId;
-        }
-    }
-
-    public IPEndPoint GetEndPoint(int id)
-    {
-        var player = GetPlayer(id);
-        return new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port);
-    }
-
-    public int EndPointToId(IPEndPoint endPoint)
-    {
-        var address = endPoint.Address.ToString();
-        var port = endPoint.Port;
-        if (_state is GameState state)
-        {
-            foreach (var player in _state.Players.Players)
-            {
-                if ((string.Compare(player.IpAddress, address) == 0) && (player.Port == port))
-                {
-                    return player.Id;
-                }
-            }
-        }
-        throw new Exception();
     }
 }

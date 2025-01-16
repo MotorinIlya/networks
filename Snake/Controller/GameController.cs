@@ -1,6 +1,5 @@
 using System.Net;
 using System.Threading;
-using Avalonia.Controls;
 using Snake.Model;
 using Snake.Net;
 using Snake.Service;
@@ -17,9 +16,10 @@ public class GameController : Observer
     private GameWindow _gameWindow;
     private bool _messageIsCreating = false;
 
+
     public GameModel Model => _gameModel;
     public Peer GamePeer => _peer;
-    public GameState GameState => _gameModel.GetState();
+    public GameState GameState => _gameModel.State;
 
     //create master
     public GameController(GameWindow gameWindow, 
@@ -29,8 +29,8 @@ public class GameController : Observer
     {
         _gameWindow = gameWindow;
         _peer = new Peer();
-        _gameModel = new GameModel(_peer, name, gameName, map, _peer.IpEndPoint);
-        _peer.AddDelay(_gameModel.StateDelayMs);
+        _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint);
+        _peer.AddDelay(_gameModel.Config.StateDelayMs);
     }
 
     //create joiner
@@ -43,8 +43,8 @@ public class GameController : Observer
     {
         _gameWindow = gameWindow;
         _peer = peer;
-        _gameModel = new GameModel(_peer, playerName, gameName, map, peer.IpEndPoint, config);
-        _peer.AddDelay(_gameModel.StateDelayMs);
+        _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config);
+        _peer.AddDelay(_gameModel.Config.StateDelayMs);
     }
 
     public void Run()
@@ -158,18 +158,47 @@ public class GameController : Observer
                     _gameModel.SetOtherRole(msg.SenderId, msg.RoleChange.SenderRole);
                 }
                 _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, msg.ReceiverId, msg.MsgSeq), endPoint);
-                _gameWindow.UpdateStatistics(_gameModel.GetState());
+                _gameWindow.UpdateStatistics(_gameModel.State);
                 break;
         }
     }
 
     private void UpdateWithModel(ModelEvent modelEvent)
     {
+        GameMessage msg;
         switch (modelEvent.Action)
         {
+            // model stop
             case ModelAction.Stop:
                 Stop();
                 break;
+            
+            //It is sent for a deputy from the master, that he is now the master and master now is a viewer.
+            case ModelAction.SendRoleMsgViewerMaster:
+                msg = CreatorMessages.CreateRoleChangeMsg(NodeRole.Viewer, 
+                                                                NodeRole.Master, 
+                                                                _gameModel.MainId, 
+                                                                modelEvent.RecvId);
+                _peer.AddMsg(msg, _gameModel.GetEndPoint(modelEvent.RecvId));
+                break;
+
+            //It is sent for a normal from master, that he is now the deputy
+            case ModelAction.SendRoleMsgRecvDeputy:
+                msg = CreatorMessages.CreateRoleChangeMsg(MConst.RoleChange.Receiver, 
+                                                                NodeRole.Deputy, 
+                                                                _gameModel.MainId, 
+                                                                modelEvent.RecvId);
+                _peer.AddMsg(msg, _gameModel.GetEndPoint(modelEvent.RecvId));
+                break;
+
+            // It is sent for a all from deputy, that he is now new master
+            case ModelAction.SendRoleMsgSendMaster:
+                CreatorMessages.CreateForAllRoleChangeMsg(_peer, 
+                                                            _gameModel, 
+                                                            _gameModel.MainId, 
+                                                            modelEvent.RecvId);
+                break;
+
         }
     }
 
