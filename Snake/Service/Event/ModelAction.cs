@@ -7,4 +7,7 @@ public enum ModelAction
     SendRoleMsgViewerMaster,
     SendRoleMsgRecvDeputy,
     SendRoleMsgSendMaster,
+    UpdateStatistics,
+    UpdateLastInteraction,
+    DeleteInactivePlayer,
 }

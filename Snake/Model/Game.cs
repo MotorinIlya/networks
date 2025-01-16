@@ -1,3 +1,4 @@
+using Avalonia.Input;
 using Snake.Controller;
 using Snake.Net;
 using Snake.View.Game;
@@ -9,6 +10,7 @@ public class Game
     private GameController _gameController;
     private TurnController _turnController;
 
+
     public TurnController TurnController => _turnController;
     public GameState GameState => _gameController.GameState;
 
@@ -18,10 +20,6 @@ public class Game
         _gameController = new GameController(gameWindow, name, gameName, map);
         _turnController = new TurnController(_gameController.Model, _gameController.GamePeer);
         _gameController.AddPeerObservers(_turnController);
-        _gameController.Run();
-        _gameController.SearchPlayers();
-        // var statWindow = new StatWindow(_gameController.Model.Players, _gameController.Model.StateDelayMs);
-        // statWindow.Show();
     }
 
     //create joiner
@@ -30,5 +28,15 @@ public class Game
         _gameController = new GameController(gameWindow, playerName, gameName, config, peer, map);
         _turnController = new TurnController(_gameController.Model, peer);
         _gameController.AddPeerObservers(_turnController);
+    }
+
+    public void Update(Key e)
+    {
+        _turnController.Update(e);
+    }
+
+    public void Run()
+    {
+        _gameController.Run();
     }
 }

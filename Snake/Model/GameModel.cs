@@ -19,8 +19,7 @@ public class GameModel : Observable
     private int _mainId = 0;
     private int _lastOrderState = 0;
     private bool _isRun = false;
-
-
+    private object _stateLock;
 
     public GamePlayers Players => _state.Players;
     public GameConfig Config => _gameConfig;
@@ -32,8 +31,13 @@ public class GameModel : Observable
 
 
     //create master
-    public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint)
+    public GameModel(string playerName, 
+                    string gameName, 
+                    Map map, 
+                    IPEndPoint endPoint, 
+                    object stateLock)
     {
+        _stateLock = stateLock;
         _map = map;
         _gameName = gameName;
         _state = new GameState()
@@ -51,8 +55,14 @@ public class GameModel : Observable
     }
 
     //create joiner
-    public GameModel(string playerName, string gameName, Map map, IPEndPoint endPoint, GameAnnouncement config)
+    public GameModel(string playerName, 
+                    string gameName, 
+                    Map map, 
+                    IPEndPoint endPoint, 
+                    GameAnnouncement config, 
+                    object stateLock)
     {
+        _stateLock = stateLock;
         _map = map;
         _gameName = gameName;
         _gameConfig = config.Config;
@@ -81,9 +91,9 @@ public class GameModel : Observable
     {
         var address = endPoint.Address.ToString();
         var port = endPoint.Port;
-        if (_state is GameState state)
+        if (Players is GamePlayers players)
         {
-            foreach (var player in _state.Players.Players)
+            foreach (var player in players.Players)
             {
                 if ((string.Compare(player.IpAddress, address) == 0) && (player.Port == port))
                 {
@@ -91,7 +101,7 @@ public class GameModel : Observable
                 }
             }
         }
-        throw new Exception();
+        return 0;
     }
 
     public GamePlayer GetPlayer(int id)
@@ -120,73 +130,76 @@ public class GameModel : Observable
 
     public void SetId(int id) => _mainId = id;
 
-
-
-    public void Run(GameWindow window)
+    public void Run()
     {
-        var threadRun = new Thread(() => {
-            RunState(window);
-        });
+        var threadRun = new Thread(RunState);
+        _isRun = true;
         threadRun.Start();
     }
 
-    private void RunState(GameWindow window)
+    private void RunState()
     {
         var bodyMap = new int[_map.Width, _map.Height];
         var snakeList = new List<GameState.Types.Snake>();
-        _isRun = true;
         while (_isRun)
         {
             Array.Clear(bodyMap);
             snakeList.Clear();
+            lock (_stateLock)
+            {
             // move snakes and count eatten apples
-            foreach (var snake in _state.Snakes)
-            {
-                var coord = CoordUtils.GetWithOffset(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
-                CoordUtils.NormalizeForMap(coord, _gameConfig.Width, _gameConfig.Height);
-                var gameObject = _map.GetGameObject(coord);
-                if (gameObject == GameObjects.Apple)
+                foreach (var snake in _state.Snakes)
                 {
-                    Eat(snake);
-                    RemoveApple(snake.Points[0]);
+                    var coord = CoordUtils.GetWithOffset(snake.Points[0], MConst.TrueDirection[snake.HeadDirection]);
+                    CoordUtils.NormalizeForMap(coord, _gameConfig.Width, _gameConfig.Height);
+                    var gameObject = _map.GetGameObject(coord);
+                    if (gameObject == GameObjects.Apple)
+                    {
+                        Eat(snake);
+                        RemoveApple(snake.Points[0]);
+                    }
+                    else
+                    {
+                        Move(snake);
+                    }
+                    GetCoordsBodySnake(snake, bodyMap);
                 }
-                else
-                {
-                    Move(snake);
-                }
-                GetCoordsBodySnake(snake, bodyMap);
-            }
 
-            // verify that snake may be in this position
-            foreach (var snake in _state.Snakes)
-            {
-                var head = snake.Points[0];
-                if (bodyMap[head.X, head.Y] == 1)
+                // verify that snake may be in this position
+                foreach (var snake in _state.Snakes)
                 {
-                    Die(snake);
+                    var head = snake.Points[0];
+                    if (bodyMap[head.X, head.Y] == 1)
+                    {
+                        Die(snake);
+                    }
+                    else if (bodyMap[head.X, head.Y] == 0)
+                    {
+                        bodyMap[head.X, head.Y] = 2;
+                        snakeList.Add(snake);
+                    }
+                    else if (bodyMap[head.X, head.Y] == 2)
+                    {
+                        var searchedSnake = SearchSnake(snakeList, snake.Points[0]);
+                        Die(searchedSnake);
+                        Die(snake);
+                    }
                 }
-                else if (bodyMap[head.X, head.Y] == 0)
-                {
-                    bodyMap[head.X, head.Y] = 2;
-                    snakeList.Add(snake);
-                }
-                else if (bodyMap[head.X, head.Y] == 2)
-                {
-                    var searchedSnake = SearchSnake(snakeList, snake.Points[0]);
-                    Die(searchedSnake);
-                    Die(snake);
-                }
-            }
 
-            // generate new apple
-            for (var i = 0; i < _gameConfig.FoodStatic - _state.Foods.Count; i++)
-            {
-                AddApple();
+                // generate new apple
+                for (var i = 0; i < _gameConfig.FoodStatic - _state.Foods.Count; i++)
+                {
+                    AddApple();
+                }
+                _map.Update(this, _state);
+                _state.StateOrder++;
+                SearchDeputy();
+                if (!_isRun)
+                {
+                    continue;
+                }
+                Update(new ModelEvent(ModelAction.UpdateStatistics, 0));
             }
-            _map.Update(this, _state);
-            _state.StateOrder++;
-            window.UpdateStatistics(_state);
-            SearchDeputy();
             Thread.Sleep(_gameConfig.StateDelayMs);
         }
     }
@@ -330,7 +343,7 @@ public class GameModel : Observable
         GetMain().Role = newRole;
     }
 
-    private GameState.Types.Snake? SearchSnake(List<GameState.Types.Snake> list, GameState.Types.Coord coord)
+    private GameState.Types.Snake SearchSnake(List<GameState.Types.Snake> list, GameState.Types.Coord coord)
     {
         foreach(var snake in list)
         {
@@ -339,7 +352,7 @@ public class GameModel : Observable
                 return snake;
             }
         }
-        return null;
+        throw new Exception();
     }
 
     private void GetCoordsBodySnake(GameState.Types.Snake snake, int[,] bodyMap)
@@ -403,22 +416,21 @@ public class GameModel : Observable
         return player;
     }
 
-    private void Die(GameState.Types.Snake? snake)
+    private void Die(GameState.Types.Snake snake)
     {
-        if (snake is not null)
-        {
-            DeletePlayer(snake.PlayerId);
-            _state.Snakes.Remove(snake);
-        }
+        DeletePlayer(snake.PlayerId);
+        _state.Snakes.Remove(snake);
     }
 
     private void DeletePlayer(int gameId)
     {
+        // if we is master and we delete our
         if (gameId == _mainId && _mainId == GetMaster().Id)
         {
             if (GetDeputy() is GamePlayer deputy)
             {
                 Update(new ModelEvent(ModelAction.SendRoleMsgViewerMaster, deputy.Id));
+                SetOtherRole(gameId, NodeRole.Master);
             }
             _isRun = false;
             Update(new ModelEvent(ModelAction.Stop, 0));

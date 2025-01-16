@@ -1,5 +1,4 @@
 using System.Net;
-using System.Threading;
 using Snake.Model;
 using Snake.Net;
 using Snake.Service;
@@ -14,7 +13,7 @@ public class GameController : Observer
     private GameModel _gameModel;
     private Peer _peer;
     private GameWindow _gameWindow;
-    private bool _messageIsCreating = false;
+    private readonly object _stateLock = new();
 
 
     public GameModel Model => _gameModel;
@@ -29,8 +28,9 @@ public class GameController : Observer
     {
         _gameWindow = gameWindow;
         _peer = new Peer();
-        _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint);
+        _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint, _stateLock);
         _peer.AddDelay(_gameModel.Config.StateDelayMs);
+        //_peer.CheckNodes();
     }
 
     //create joiner
@@ -43,20 +43,18 @@ public class GameController : Observer
     {
         _gameWindow = gameWindow;
         _peer = peer;
-        _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config);
+        _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config, _stateLock);
         _peer.AddDelay(_gameModel.Config.StateDelayMs);
+        //_peer.CheckNodes();
     }
 
     public void Run()
     {
-        _messageIsCreating = true;
-        _gameModel.Run(_gameWindow);
-        SearchPlayers();
+        _gameModel.Run();
     }
 
     public void Stop()
     {
-        _messageIsCreating = false;
         _peer.StopMulticastSocket();
     }
 
@@ -67,21 +65,22 @@ public class GameController : Observer
         _gameModel.AddObserver(this);
     }
 
-    public void SearchPlayers()
-    {
-        var createMsgThread = new Thread(PeriodicCreateMsg);
-        createMsgThread.Start();
-    }
-
     public override void Update(ObserverEvent newEvent)
     {
-        if (newEvent is GameEvent gameEvent)
+        lock(_stateLock)
         {
-            UpdateWithMsg(gameEvent);
-        }
-        else if (newEvent is ModelEvent modelEvent)
-        {
-            UpdateWithModel(modelEvent);
+            if (newEvent is GameEvent gameEvent)
+            {
+                UpdateWithMsg(gameEvent);
+            }
+            else if (newEvent is ModelEvent modelEvent)
+            {
+                UpdateWithModel(modelEvent);
+            }
+            else if (newEvent is PeerEvent peerEvent)
+            {
+                UpdateWithPeer(peerEvent);
+            }
         }
     }
 
@@ -142,20 +141,20 @@ public class GameController : Observer
                 _peer.AddMsg(CreatorMessages.CreateAnnouncementMsg(_gameModel), endPoint);
                 break;
             case GameMessage.TypeOneofCase.RoleChange:
+                if (msg.RoleChange.HasSenderRole)
+                {
+                    _gameModel.SetOtherRole(msg.SenderId, msg.RoleChange.SenderRole);
+                }
+                
                 if (msg.RoleChange.HasReceiverRole)
                 {
+                    _gameModel.SetRole(msg.RoleChange.ReceiverRole);
                     if (msg.RoleChange.ReceiverRole == NodeRole.Master)
                     {
                         var id = _gameModel.SetDeputy();
                         CreatorMessages.CreateForAllRoleChangeMsg(_peer, _gameModel, _gameModel.MainId, id);
                         Run();
                     }
-                    _gameModel.SetRole(msg.RoleChange.ReceiverRole);
-                }
-
-                if (msg.RoleChange.HasSenderRole)
-                {
-                    _gameModel.SetOtherRole(msg.SenderId, msg.RoleChange.SenderRole);
                 }
                 _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, msg.ReceiverId, msg.MsgSeq), endPoint);
                 _gameWindow.UpdateStatistics(_gameModel.State);
@@ -171,6 +170,17 @@ public class GameController : Observer
             // model stop
             case ModelAction.Stop:
                 Stop();
+                break;
+            
+            //Update stats for window
+            case ModelAction.UpdateStatistics:
+                _gameWindow.UpdateStatistics(_gameModel.State);
+                PeriodicCreateMsg();
+                break;
+
+            //Delete inactive player if he dont send msg long time
+            case ModelAction.DeleteInactivePlayer:
+                _gameModel.InactivePlayer(modelEvent.RecvId);
                 break;
             
             //It is sent for a deputy from the master, that he is now the master and master now is a viewer.
@@ -198,27 +208,35 @@ public class GameController : Observer
                                                             _gameModel.MainId, 
                                                             modelEvent.RecvId);
                 break;
-
         }
+    }
+
+    private void UpdateWithPeer(PeerEvent peerEvent)
+    {
+        switch (peerEvent.PeerAction)
+        {
+            case PeerAction.UpdateLastInteraction:
+                _peer.UpdateLastInteraction(_gameModel.EndPointToId(peerEvent.IPEndPoint));
+                break;
+            case PeerAction.DeleteInactivePlayer:
+                _gameModel.InactivePlayer(_gameModel.EndPointToId(peerEvent.IPEndPoint));
+                break;
+        }
+        
     }
 
     private void PeriodicCreateMsg()
     {
-        while (_messageIsCreating)
-        {
-            var msg = CreatorMessages.CreateAnnouncementMsg(_gameModel);
-            _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort));
+        var msg = CreatorMessages.CreateAnnouncementMsg(_gameModel);
+        _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort));
 
-            msg = CreatorMessages.CreateStateMsg(_gameModel);
-            foreach (var player in _gameModel.Players.Players)
+        msg = CreatorMessages.CreateStateMsg(_gameModel);
+        foreach (var player in _gameModel.Players.Players)
+        {
+            if (player.Id != _gameModel.MainId)
             {
-                if (player.Id != _gameModel.MainId)
-                {
-                    _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
-                }
+                _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port));
             }
-            
-            Thread.Sleep(NetConst.StartDelay);
         }
     }
 }

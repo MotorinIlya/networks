@@ -1,4 +1,5 @@
 using Snake.Net;
+using Snake.Service;
 
 namespace Snake.Model;
 
@@ -80,8 +81,8 @@ public static class CreatorMessages
             }
             else
             {
-            var msg = CreateRoleChangeMsg(MConst.RoleChange.Sender, NodeRole.Master, senderId, player.Id);
-            peer.AddMsg(msg, model.GetEndPoint(player.Id));
+                var msg = CreateRoleChangeMsg(MConst.RoleChange.Sender, NodeRole.Master, senderId, player.Id);
+                peer.AddMsg(msg, model.GetEndPoint(player.Id));
             }
         }
     }

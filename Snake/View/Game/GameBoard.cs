@@ -14,7 +14,6 @@ public class GameBoard : UserControl
 {
     private Map _map;
     private Timer _timer;
-    private TurnController _controller;
     private Model.Game _game;
 
     public GameState GameState => _game.GameState;
@@ -26,7 +25,7 @@ public class GameBoard : UserControl
         _timer = new Timer(OnTimerTick, null, 0, 1000);
         _map = new Map(width, height);
         _game = new Model.Game(gameWindow, name, gameName, _map);
-        _controller = _game.TurnController;
+        _game.Run();
     }
 
     //create joiner
@@ -36,12 +35,11 @@ public class GameBoard : UserControl
         _timer = new Timer(OnTimerTick, null, 0, 1000);
         _map = new Map(config.Config.Width, config.Config.Height);
         _game = new Model.Game(gameWindow, playerName, gameName, config, peer, _map);
-        _controller = _game.TurnController;
     }
 
     public void HandleInput(Key e)
     {
-        _controller.Update(e);
+        _game.Update(e);
     }
 
     public override void Render(DrawingContext context)

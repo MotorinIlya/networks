@@ -26,9 +26,14 @@ public class Peer : Observable
     private int _stateDelayMs = NetConst.StartDelay;
     private bool _multicastIsOn = false;
 
+
+    public int UnicastPort => _unicastPort;
+    public IPEndPoint IpEndPoint => new IPEndPoint(_unicastAddress, _unicastPort);
+    public Dictionary<IPEndPoint, GameMessage> Games => _games;
+
+
     public Peer()
     {
-        //_activeCopies = [];
         _multicastSocket = new();
         _multicastSocket.Bind();
         _unicastSocket = new(NetConst.UnicastPort);
@@ -53,6 +58,11 @@ public class Peer : Observable
         _stateDelayMs = delay;
     }
 
+    public void CheckNodes()
+    {
+        var inactiveThread = new Thread(CheckInactiveNodes);
+        inactiveThread.Start();
+    }
 
     public void SearchMulticastCopies()
     {
@@ -93,8 +103,12 @@ public class Peer : Observable
                 var repeat = message.Item3;
                 var buffer = msg.ToByteArray();
                 _unicastSocket.Send(buffer, buffer.Length, remoteEndPoint);
-                //UpdateLastInteraction()
 
+                // if (string.Compare(remoteEndPoint.Address.ToString(), NetConst.MulticastIP) != 0)
+                // {
+                //     Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
+                // }
+                
                 if (msg.TypeCase != GameMessage.TypeOneofCase.Ack 
                     && msg.TypeCase != GameMessage.TypeOneofCase.Announcement)
                 { 
@@ -126,13 +140,26 @@ public class Peer : Observable
 
     public void ReceiveMsg()
     {
-        IPEndPoint? remoteEndPoint = null;
         while (true)
         {
-            var buffer = _unicastSocket.Receive(ref remoteEndPoint);
+            IPEndPoint? remoteEndPoint = null;
+            byte[] buffer;
+            try
+            {
+                buffer = _unicastSocket.Receive(ref remoteEndPoint);
+            }
+            catch (Exception)
+            {
+                if (remoteEndPoint is IPEndPoint remote)
+                {
+                    Update(new PeerEvent(PeerAction.DeleteInactivePlayer, remote));
+                }
+                continue;
+            }
+            
             var message = GameMessage.Parser.ParseFrom(buffer);
             Update(new GameEvent(message, remoteEndPoint));
-            //UpdateLastInteraction();
+            //Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
         }
     }
 
@@ -146,14 +173,17 @@ public class Peer : Observable
 
     public void UpdateLastInteraction(int id)
     {
-        _lastInteraction[id] = DateTime.Now;
+        if (id != 0)
+        {
+            _lastInteraction[id] = DateTime.Now;
+        }
     }
 
-    public void CheckInactiveNodes(GameModel model)
+    public void CheckInactiveNodes()
     {
         while (true)
         {
-            var timeout = TimeSpan.FromMilliseconds(_stateDelayMs * 0.8);
+            var timeout = TimeSpan.FromMilliseconds(_stateDelayMs);
             var now = DateTime.Now;
             var inactiveNodes = _lastInteraction
                 .Where(pair => now - pair.Value > timeout)
@@ -162,17 +192,11 @@ public class Peer : Observable
 
             foreach (var nodeId in inactiveNodes)
             {
-                model.InactivePlayer(nodeId);
+                Update(new ModelEvent(ModelAction.DeleteInactivePlayer, nodeId));
                 _lastInteraction.Remove(nodeId, out _);
             }
 
             Thread.Sleep((int)(_stateDelayMs * 0.4));
         }
     }
-
-    public int UnicastPort => _unicastPort;
-
-    public IPEndPoint IpEndPoint => new IPEndPoint(_unicastAddress, _unicastPort);
-
-    public Dictionary<IPEndPoint, GameMessage> Games => _games;
 }
