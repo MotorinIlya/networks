@@ -200,7 +200,10 @@ public class GameModel : Observable
         {
             if (inactiveRole == NodeRole.Master)
             {
-                GetDeputy().Role = NodeRole.Master;
+                if (GetDeputy() is GamePlayer deputy)
+                {
+                    deputy.Role = NodeRole.Master;
+                }
             }
         }
         else if (GetMain().Role == NodeRole.Master)
@@ -413,7 +416,10 @@ public class GameModel : Observable
     {
         if (gameId == _mainId && _mainId == GetMaster().Id)
         {
-            Update(new ModelEvent(ModelAction.SendRoleMsgViewerMaster, GetDeputy().Id));
+            if (GetDeputy() is GamePlayer deputy)
+            {
+                Update(new ModelEvent(ModelAction.SendRoleMsgViewerMaster, deputy.Id));
+            }
             _isRun = false;
             Update(new ModelEvent(ModelAction.Stop, 0));
         }
