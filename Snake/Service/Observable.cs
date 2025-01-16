@@ -10,7 +10,7 @@ public class Observable()
 
     public void RemoveObserver(Observer observer) => _observers.Remove(observer);
 
-    public void Update(GameEvent gameEvent)
+    public void Update(ObserverEvent gameEvent)
     {
         foreach(var observer in _observers)
         {

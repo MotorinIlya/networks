@@ -2,34 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
-using Avalonia.Media;
 using Snake.Net;
+using Snake.Service;
+using Snake.Service.Event;
 using Snake.View.Game;
 
 namespace Snake.Model;
 
-public class GameModel
+public class GameModel : Observable
 {
     private Peer _peer;
     private Dictionary<IPEndPoint, int> _endPointToId = [];
-
     private GameConfig _gameConfig;
-
     private string _gameName = "sss";
-
     private Map _map;
-
     private int _playerId = 1;
     private int _mainId = 0;
     private int _deputyId = 0;
     private int _masterId = 0;
     private string _playerName;
-
-    private GameState? _state;
-
+    private GameState _state;
     private NodeRole _nodeRole;
-
     private int _lastOrderState = 0;
+    private bool _isRun = false;
+
+
+
+    public GamePlayers Players => _state.Players;
+    public GameConfig Config => _gameConfig;
+    public string MainName => _playerName;
+    public int MainId => _mainId;
+    public string GameName => _gameName;
+    public Map GameMap => _map;
+    public NodeRole Role => _nodeRole;
+    public int StateDelayMs => _gameConfig.StateDelayMs;
+    public GamePlayer GetMaster() => GetPlayer(_masterId);
+    public GamePlayer GetMain() => GetPlayer(_mainId);
+    public void SetId(int id) => _mainId = id;
+    public GameState GetState() => _state;
+
+
 
     //create master
     public GameModel(Peer peer, string playerName, string gameName, Map map, IPEndPoint endPoint)
@@ -62,7 +74,13 @@ public class GameModel
         _playerName = playerName;
         _gameName = gameName;
         _gameConfig = config.Config;
+        _state = new GameState()
+        {
+            StateOrder = _lastOrderState
+        };
     }
+
+
 
     public void Run(GameWindow window)
     {
@@ -74,10 +92,10 @@ public class GameModel
 
     private void RunState(GameWindow window)
     {
-        while (_state is null);
         var bodyMap = new int[_map.Width, _map.Height];
         var snakeList = new List<GameState.Types.Snake>();
-        while (_nodeRole == NodeRole.Master)
+        _isRun = true;
+        while (_isRun)
         {
             Array.Clear(bodyMap);
             snakeList.Clear();
@@ -148,9 +166,13 @@ public class GameModel
         {
             var msg = CreatorMessages.CreateRoleChangeMsg(NodeRole.Viewer, NodeRole.Master, _mainId, _deputyId);
             _peer.AddMsg(msg, GetEndPoint(_deputyId));
+            _nodeRole = NodeRole.Viewer;
+            _isRun = false;
+            Update(new ModelEvent(ModelAction.Stop));
         }
+        _masterId = _deputyId;
+        _deputyId = 0;
         var player = GetPlayer(gameId);
-        _nodeRole = NodeRole.Viewer;
         player.Role = NodeRole.Viewer;
     }
 
@@ -342,16 +364,19 @@ public class GameModel
         }
     }
 
-    public GamePlayer? GetPlayer(int id)
+    public GamePlayer GetPlayer(int id)
     {
-        foreach (var player in _state.Players.Players)
+        if (_state is GameState state)
         {
-            if (player.Id == id)
+            foreach (var player in _state.Players.Players)
             {
-                return player;
+                if (player.Id == id)
+                {
+                    return player;
+                }
             }
         }
-        return null;
+        throw new Exception();
     }
 
     public bool HasPlayer(int id)
@@ -366,7 +391,7 @@ public class GameModel
         return false;
     }
 
-    public GameState.Types.Snake? GetSnake(int id)
+    public GameState.Types.Snake GetSnake(int id)
     {
         foreach (var snake in _state.Snakes)
         {
@@ -375,12 +400,11 @@ public class GameModel
                 return snake;
             }
         }
-        return null;
+        throw new Exception();
     }
 
     public void SetMasterAndDeputy()
     {
-        var HasDeputy = false;
         foreach (var player in _state.Players.Players)
         {
             if (player.Id == _mainId)
@@ -394,14 +418,7 @@ public class GameModel
             if (player.Role == NodeRole.Deputy)
             {
                 _deputyId = player.Id;
-                HasDeputy = true;
             }
-        }
-
-        //search and create deputy
-        if (!HasDeputy)
-        {
-            SetDeputy();
         }
     }
 
@@ -418,10 +435,22 @@ public class GameModel
         return 0;
     }
 
-    public void SetMaster(int id)
+    public void SetMaster(int id, GamePlayer player)
     {
         _masterId = id;
-        GetPlayer(id).Role = NodeRole.Master;
+        player.Role = NodeRole.Master;
+    }
+
+    public void SetOtherRole(int id, NodeRole nodeRole)
+    {
+        if (GetPlayer(id) is GamePlayer player)
+        {
+            if (nodeRole == NodeRole.Master)
+            {
+                _masterId = id;
+            }
+            player.Role = nodeRole;
+        }
     }
 
     public void SetRole(NodeRole newRole)
@@ -445,27 +474,18 @@ public class GameModel
         return new IPEndPoint(IPAddress.Parse(player.IpAddress), player.Port);
     }
 
-    public GamePlayer? GetMaster() => GetPlayer(_masterId);
-    public GamePlayer GetMain() => GetPlayer(_mainId);
-    public void SetId(int id) => _mainId = id;
-    public GameState GetState() => _state;
-    public GamePlayers Players => _state.Players;
-    public GameConfig Config => _gameConfig;
-    public string MainName => _playerName;
-    public int MainId => _mainId;
-    public string GameName => _gameName;
-    public Map GameMap => _map;
-    public NodeRole Role => _nodeRole;
-    public int StateDelayMs => _gameConfig.StateDelayMs;
     public int EndPointToId(IPEndPoint endPoint)
     {
         var address = endPoint.Address.ToString();
         var port = endPoint.Port;
-        foreach (var player in _state.Players.Players)
+        if (_state is GameState state)
         {
-            if ((string.Compare(player.IpAddress, address) == 0) && (player.Port == port))
+            foreach (var player in _state.Players.Players)
             {
-                return player.Id;
+                if ((string.Compare(player.IpAddress, address) == 0) && (player.Port == port))
+                {
+                    return player.Id;
+                }
             }
         }
         throw new Exception();

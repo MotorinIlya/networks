@@ -15,25 +15,16 @@ namespace Snake.Net;
 
 public class Peer : Observable
 {
-    //private Dictionary<IPEndPoint, DateTime> _activeCopies;
-
     private Dictionary<IPEndPoint, GameMessage> _games;
-
     private ConcurrentQueue<(GameMessage, IPEndPoint, bool)> _sendMessages;
-
     private ConcurrentDictionary<(long, string), ManualResetEvent> _pendingAcks;
-
     private ConcurrentDictionary<int, DateTime> _lastInteraction;
-
     private MulticastSocket _multicastSocket;
-
     private UdpClient _unicastSocket;
-
     private int _unicastPort;
-
     private IPAddress _unicastAddress;
-
     private int _stateDelayMs = NetConst.StartDelay;
+    private bool _multicastIsOn = false;
 
     public Peer()
     {
@@ -41,11 +32,14 @@ public class Peer : Observable
         _multicastSocket = new();
         _multicastSocket.Bind();
         _unicastSocket = new(NetConst.UnicastPort);
-        _unicastPort = ((IPEndPoint)_unicastSocket.Client.LocalEndPoint).Port;
+        _unicastPort = _unicastSocket.Client.LocalEndPoint is IPEndPoint endPoint 
+                            ? endPoint.Port 
+                            : throw new Exception(); 
         _unicastAddress = GetterIP.GetLocalIpAddress();
         _sendMessages = [];
         _pendingAcks = [];
         _games = [];
+        _lastInteraction = [];
 
         var sendThread = new Thread(SendMsg);
         sendThread.Start();
@@ -62,52 +56,32 @@ public class Peer : Observable
 
     public void SearchMulticastCopies()
     {
+        _multicastIsOn = true;
         var receiveThread = new Thread(SearchCopies);
         receiveThread.Start();
-
-        // Thread deleteThread = new Thread(DeleteDeactiveCopies);
-        // deleteThread.Start();
     }
 
     private void SearchCopies()
     {
         IPEndPoint? remoteEndPoint = null;
 
-        while (true)
+        while (_multicastIsOn)
         {
             var buffer = _multicastSocket.Receive(ref remoteEndPoint);
             var message = GameMessage.Parser.ParseFrom(buffer);
-
-            // lock (_activeCopies)
-            // {
-            //     _activeCopies[remoteEndPoint] = DateTime.Now;
-            // }
             _games[remoteEndPoint] = message;
         }
     }
 
-    // private void DeleteDeactiveCopies()
-    // {
-    //     while (true)
-    //     {
-    //         var dateTime = DateTime.Now;
-    //         lock (_activeCopies)
-    //         {
-    //             foreach (var copy in _activeCopies)
-    //             {
-    //                 if (dateTime - copy.Value > NetConst.ExpirationTime)
-    //                 {
-    //                     _activeCopies.Remove(copy.Key);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    public void StopMulticastSocket()
+    {
+        _multicastIsOn = false;
+    }
 
     public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => 
                                         _sendMessages.Enqueue((msg, remoteEndPoint, false));
 
-    public async void SendMsg()
+    public void SendMsg()
     {
         while (true)
         {

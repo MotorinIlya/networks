@@ -15,6 +15,7 @@ public class GameController : Observer
     private GameModel _gameModel;
     private Peer _peer;
     private GameWindow _gameWindow;
+    private bool _messageIsCreating = false;
 
     public GameModel Model => _gameModel;
     public Peer GamePeer => _peer;
@@ -48,14 +49,22 @@ public class GameController : Observer
 
     public void Run()
     {
+        _messageIsCreating = true;
         _gameModel.Run(_gameWindow);
         SearchPlayers();
+    }
+
+    public void Stop()
+    {
+        _messageIsCreating = false;
+        _peer.StopMulticastSocket();
     }
 
     public void AddPeerObservers(TurnController turnController)
     {
         _peer.AddObserver(this);
         _peer.AddObserver(turnController);
+        _gameModel.AddObserver(this);
     }
 
     public void SearchPlayers()
@@ -64,7 +73,19 @@ public class GameController : Observer
         createMsgThread.Start();
     }
 
-    public override void Update(GameEvent gameEvent)
+    public override void Update(ObserverEvent newEvent)
+    {
+        if (newEvent is GameEvent gameEvent)
+        {
+            UpdateWithMsg(gameEvent);
+        }
+        else if (newEvent is ModelEvent modelEvent)
+        {
+            UpdateWithModel(modelEvent);
+        }
+    }
+
+    private void UpdateWithMsg(GameEvent gameEvent)
     {
         var msg = gameEvent.Message;
         var endPoint = gameEvent.IpEndPoint;
@@ -134,19 +155,27 @@ public class GameController : Observer
 
                 if (msg.RoleChange.HasSenderRole)
                 {
-                    if (msg.RoleChange.SenderRole == NodeRole.Master)
-                    {
-                        _gameModel.SetMaster(msg.SenderId);
-                    }
+                    _gameModel.SetOtherRole(msg.SenderId, msg.RoleChange.SenderRole);
                 }
                 _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, msg.ReceiverId, msg.MsgSeq), endPoint);
+                _gameWindow.UpdateStatistics(_gameModel.GetState());
+                break;
+        }
+    }
+
+    private void UpdateWithModel(ModelEvent modelEvent)
+    {
+        switch (modelEvent.Action)
+        {
+            case ModelAction.Stop:
+                Stop();
                 break;
         }
     }
 
     private void PeriodicCreateMsg()
     {
-        while (true)
+        while (_messageIsCreating)
         {
             var msg = CreatorMessages.CreateAnnouncementMsg(_gameModel);
             _peer.AddMsg(msg, new IPEndPoint(IPAddress.Parse(NetConst.MulticastIP), NetConst.MulticastPort));

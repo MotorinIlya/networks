@@ -3,7 +3,7 @@ using Snake.Net;
 
 namespace Snake.Service.Event;
 
-public class GameEvent
+public class GameEvent : ObserverEvent
 {
     private GameMessage _message;
 

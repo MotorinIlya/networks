@@ -40,10 +40,10 @@ public static class FinderFreePosition
                     tmp1 += map.Width;
                     tmp1 %= map.Width;
                 }
-                if (tmp2 < 0 || tmp2 >= map.Width)
+                if (tmp2 < 0 || tmp2 >= map.Height)
                 {
-                    tmp2 += map.Width;
-                    tmp2 %= map.Width;
+                    tmp2 += map.Height;
+                    tmp2 %= map.Height;
                 }
                 if (map.GetGameObject(tmp1, tmp2) != GameObjects.Floor)
                 {

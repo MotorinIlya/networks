@@ -30,7 +30,7 @@ public partial class GameWindow : Window
     {
         InitializeComponent();
         CanResize = false;
-        Width = config.Config.Width * ViewConst.BlockSize;
+        Width = config.Config.Width * ViewConst.BlockSize + ViewConst.StatisticsWidth;
         Height = config.Config.Height * ViewConst.BlockSize;
         Title = "Snake";
 
