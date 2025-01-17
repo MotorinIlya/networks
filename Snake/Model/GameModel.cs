@@ -21,7 +21,7 @@ public class GameModel : Observable
     private int _lastOrderState = 0;
     private bool _isRun = false;
     private object _stateLock;
-    private object _runLock;
+    
 
     public GamePlayers Players => _state.Players;
     public GameConfig Config => _gameConfig;
@@ -134,8 +134,11 @@ public class GameModel : Observable
 
     public void Run()
     {
-        var threadRun = new Thread(RunState);
-        threadRun.Start();
+        if (!_isRun)
+        {
+            var threadRun = new Thread(RunState);
+            threadRun.Start();
+        }
     }
 
     private void RunState()
