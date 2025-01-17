@@ -19,7 +19,7 @@ public class Game
     public Game(GameWindow gameWindow, string name, string gameName, Map map)
     {
         _gameController = new GameController(gameWindow, name, gameName, map);
-        _turnController = new TurnController(_gameController.Model, _gameController.GamePeer);
+        _turnController = new TurnController(gameWindow, _gameController.Model, _gameController.GamePeer);
         _gameController.AddPeerObservers(_turnController);
     }
 
@@ -27,7 +27,7 @@ public class Game
     public Game(GameWindow gameWindow, string playerName, string gameName, GameAnnouncement config, Peer peer, Map map)
     {
         _gameController = new GameController(gameWindow, playerName, gameName, config, peer, map);
-        _turnController = new TurnController(_gameController.Model, peer);
+        _turnController = new TurnController(gameWindow, _gameController.Model, peer);
         _gameController.AddPeerObservers(_turnController);
     }
 

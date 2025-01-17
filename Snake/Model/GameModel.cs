@@ -144,7 +144,6 @@ public class GameModel : Observable
     private void RunState()
     {
         _isRun = true;
-        Trace.WriteLine("Run state is work");
         var bodyMap = new int[_map.Width, _map.Height];
         var snakeList = new List<GameState.Types.Snake>();
         while (_isRun)
@@ -208,6 +207,11 @@ public class GameModel : Observable
             }
             Thread.Sleep(_gameConfig.StateDelayMs);
         }
+    }
+
+    public void Stop()
+    {
+        _isRun = false;
     }
 
     public void InactivePlayer(int inactiveId)

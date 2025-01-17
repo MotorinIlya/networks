@@ -25,6 +25,7 @@ public class Peer : Observable
     private IPAddress _unicastAddress;
     private int _stateDelayMs = NetConst.StartDelay;
     private bool _multicastIsOn = false;
+    private bool _isRun = true;
 
 
     public int UnicastPort => _unicastPort;
@@ -88,12 +89,18 @@ public class Peer : Observable
         _multicastIsOn = false;
     }
 
+    public void Stop()
+    {
+        StopMulticastSocket();
+        _isRun = false;
+    }
+
     public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => 
                                         _sendMessages.Enqueue((msg, remoteEndPoint, false));
 
     public void SendMsg()
     {
-        while (true)
+        while (_isRun)
         {
             if (_sendMessages.TryDequeue(out var message))
             {
@@ -140,7 +147,7 @@ public class Peer : Observable
 
     public void ReceiveMsg()
     {
-        while (true)
+        while (_isRun)
         {
             IPEndPoint? remoteEndPoint = null;
             byte[] buffer;
@@ -181,7 +188,7 @@ public class Peer : Observable
 
     public void CheckInactiveNodes()
     {
-        while (true)
+        while (_isRun)
         {
             var timeout = TimeSpan.FromMilliseconds(_stateDelayMs);
             var now = DateTime.Now;

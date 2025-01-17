@@ -40,6 +40,10 @@ public class GameBoard : UserControl
     public void HandleInput(Key e)
     {
         _game.Update(e);
+        if (e == Key.Escape)
+        {
+            _timer.Dispose();
+        }
     }
 
     public override void Render(DrawingContext context)

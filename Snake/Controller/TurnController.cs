@@ -1,17 +1,19 @@
 using System.Net;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Snake.Model;
 using Snake.Net;
 using Snake.Service;
 using Snake.Service.Event;
+using Snake.View.Game;
 
 namespace Snake.Controller;
 
-public class TurnController(GameModel gameModel, Peer peer) : Observer
+public class TurnController(GameWindow window, GameModel gameModel, Peer peer) : Observer
 {
     private GameModel _model = gameModel;
-
     private Peer _peer = peer;
+    private GameWindow _window = window;
 
     public void UpdateDirectionSnake(Direction newDirection, int playerId)
     {
@@ -36,6 +38,13 @@ public class TurnController(GameModel gameModel, Peer peer) : Observer
 
     public void Update(Key key)
     {
+        if (key == Key.Escape)
+        {
+            _peer.Stop();
+            _model.Stop();
+            Dispatcher.UIThread.InvokeAsync(_window.Close);
+            return;
+        }
         if (MConst.KeyDirection.ContainsKey(key))
         {
             if (_model.Role == NodeRole.Master)

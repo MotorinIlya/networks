@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -11,7 +10,6 @@ public partial class StartWindow : Window
 {
     public StartWindow()
     {
-        Trace.Listeners.Add(new ConsoleTraceListener());
         CanResize = false;
         InitializeComponent();
     }
