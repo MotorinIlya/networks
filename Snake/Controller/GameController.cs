@@ -30,7 +30,7 @@ public class GameController : Observer
         _peer = new Peer();
         _gameModel = new GameModel(name, gameName, map, _peer.IpEndPoint, _stateLock);
         _peer.AddDelay(_gameModel.Config.StateDelayMs);
-        //_peer.CheckNodes();
+        _peer.CheckNodes();
     }
 
     //create joiner
@@ -45,7 +45,7 @@ public class GameController : Observer
         _peer = peer;
         _gameModel = new GameModel(playerName, gameName, map, peer.IpEndPoint, config, _stateLock);
         _peer.AddDelay(_gameModel.Config.StateDelayMs);
-        //_peer.CheckNodes();
+        _peer.CheckNodes();
     }
 
     public void Run()
@@ -156,7 +156,7 @@ public class GameController : Observer
                         Run();
                     }
                 }
-                _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, msg.ReceiverId, msg.MsgSeq), endPoint);
+                _peer.AddMsg(CreatorMessages.CreateAckMsg(_gameModel.MainId, msg.SenderId, msg.MsgSeq), endPoint);
                 _gameWindow.UpdateStatistics(_gameModel.State);
                 break;
         }

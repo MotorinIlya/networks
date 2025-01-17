@@ -65,6 +65,10 @@ public partial class GameWindow : Window
                         + player.Score
             });
         }
+        PlayerBoard.Children.Add(new TextBlock
+        {
+            Text = $"Snake count: {state.Snakes.Count}"
+        });
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)

@@ -104,10 +104,10 @@ public class Peer : Observable
                 var buffer = msg.ToByteArray();
                 _unicastSocket.Send(buffer, buffer.Length, remoteEndPoint);
 
-                // if (string.Compare(remoteEndPoint.Address.ToString(), NetConst.MulticastIP) != 0)
-                // {
-                //     Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
-                // }
+                if (string.Compare(remoteEndPoint.Address.ToString(), NetConst.MulticastIP) != 0)
+                {
+                    Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
+                }
                 
                 if (msg.TypeCase != GameMessage.TypeOneofCase.Ack 
                     && msg.TypeCase != GameMessage.TypeOneofCase.Announcement)
@@ -159,7 +159,7 @@ public class Peer : Observable
             
             var message = GameMessage.Parser.ParseFrom(buffer);
             Update(new GameEvent(message, remoteEndPoint));
-            //Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
+            Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
         }
     }
 

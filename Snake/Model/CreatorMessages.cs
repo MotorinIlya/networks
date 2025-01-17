@@ -74,6 +74,10 @@ public static class CreatorMessages
     {
         foreach (var player in model.Players.Players)
         {
+            if (player.Id == model.MainId)
+            {
+                continue;
+            }
             if (player.Id == deputyId)
             {
                 var msg = CreateRoleChangeMsg(NodeRole.Master, NodeRole.Deputy, senderId, deputyId);

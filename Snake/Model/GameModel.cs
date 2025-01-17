@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using Snake.Net;
@@ -20,6 +21,7 @@ public class GameModel : Observable
     private int _lastOrderState = 0;
     private bool _isRun = false;
     private object _stateLock;
+    private object _runLock;
 
     public GamePlayers Players => _state.Players;
     public GameConfig Config => _gameConfig;
@@ -133,12 +135,13 @@ public class GameModel : Observable
     public void Run()
     {
         var threadRun = new Thread(RunState);
-        _isRun = true;
         threadRun.Start();
     }
 
     private void RunState()
     {
+        _isRun = true;
+        Trace.WriteLine("Run state is work");
         var bodyMap = new int[_map.Width, _map.Height];
         var snakeList = new List<GameState.Types.Snake>();
         while (_isRun)
@@ -196,7 +199,7 @@ public class GameModel : Observable
                 SearchDeputy();
                 if (!_isRun)
                 {
-                    continue;
+                    break;
                 }
                 Update(new ModelEvent(ModelAction.UpdateStatistics, 0));
             }
