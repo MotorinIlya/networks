@@ -40,7 +40,7 @@ public class TurnController(GameWindow window, GameModel gameModel, Peer peer) :
     {
         if (key == Key.Escape)
         {
-            _peer.Stop();
+            _peer.StrongStop();
             _model.Stop();
             Dispatcher.UIThread.InvokeAsync(_window.Close);
             return;

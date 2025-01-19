@@ -26,6 +26,10 @@ public class Peer : Observable
     private int _stateDelayMs = NetConst.StartDelay;
     private bool _multicastIsOn = false;
     private bool _isRun = true;
+    private Thread _inactiveThread;
+    private Thread _sendThread;
+    private Thread _receiveThread;
+    private Thread _mulReceiveThread;
 
 
     public int UnicastPort => _unicastPort;
@@ -47,11 +51,15 @@ public class Peer : Observable
         _games = [];
         _lastInteraction = [];
 
-        var sendThread = new Thread(SendMsg);
-        sendThread.Start();
+        _sendThread = new(SendMsg);
+        _sendThread.Start();
 
-        var receiveThread = new Thread(ReceiveMsg);
-        receiveThread.Start();
+        _receiveThread = new(ReceiveMsg);
+        _receiveThread.Start();
+
+        _inactiveThread = new(CheckInactiveNodes);
+
+        _mulReceiveThread = new(SearchCopies);
     }
 
     public void AddDelay(int delay)
@@ -61,15 +69,13 @@ public class Peer : Observable
 
     public void CheckNodes()
     {
-        var inactiveThread = new Thread(CheckInactiveNodes);
-        inactiveThread.Start();
+        _inactiveThread.Start();
     }
 
     public void SearchMulticastCopies()
     {
         _multicastIsOn = true;
-        var receiveThread = new Thread(SearchCopies);
-        receiveThread.Start();
+        _mulReceiveThread.Start();
     }
 
     private void SearchCopies()
@@ -93,6 +99,13 @@ public class Peer : Observable
     {
         StopMulticastSocket();
         _isRun = false;
+    }
+    public void StrongStop()
+    {
+        _inactiveThread.Interrupt();
+        _receiveThread.Interrupt();
+        _sendThread.Interrupt();
+        _mulReceiveThread.Interrupt();
     }
 
     public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => 
@@ -123,7 +136,7 @@ public class Peer : Observable
                     _pendingAcks[(msg.MsgSeq, remoteEndPoint.ToString())] = resetEvent;
 
                     //wait ack message
-                    var ackReceived = resetEvent.WaitOne(_stateDelayMs / 10);
+                    var ackReceived = resetEvent.WaitOne(_stateDelayMs / 5);
 
                     if (!ackReceived)
                     {
@@ -203,7 +216,7 @@ public class Peer : Observable
                 _lastInteraction.Remove(nodeId, out _);
             }
 
-            Thread.Sleep((int)(_stateDelayMs * 0.4));
+            Thread.Sleep(_stateDelayMs);
         }
     }
 }
