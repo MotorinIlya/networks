@@ -122,11 +122,6 @@ public class Peer : Observable
                 var repeat = message.Item3;
                 var buffer = msg.ToByteArray();
                 _unicastSocket.Send(buffer, buffer.Length, remoteEndPoint);
-
-                // if (string.Compare(remoteEndPoint.Address.ToString(), NetConst.MulticastIP) != 0)
-                // {
-                //     Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
-                // }
                 
                 if (msg.TypeCase != GameMessage.TypeOneofCase.Ack 
                     && msg.TypeCase != GameMessage.TypeOneofCase.Announcement)
@@ -135,7 +130,7 @@ public class Peer : Observable
                     _pendingAcks[(msg.MsgSeq, remoteEndPoint.ToString())] = resetEvent;
 
                     //wait ack message
-                    var ackReceived = resetEvent.WaitOne(_stateDelayMs / 5);
+                    var ackReceived = resetEvent.WaitOne(_stateDelayMs * 2 / 5);
 
                     if (!ackReceived)
                     {

@@ -248,6 +248,7 @@ public class GameModel : Observable
                 var id = SetDeputy();
                 GetMain().Role = NodeRole.Master;
                 Update(new ModelEvent(ModelAction.SendRoleMsgSendMaster, id));
+                Run();
             }
         }
         _state.Players.Players.Remove(player);
