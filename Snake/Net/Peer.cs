@@ -62,10 +62,11 @@ public class Peer : Observable
         _mulReceiveThread = new(SearchCopies);
     }
 
-    public void AddDelay(int delay)
-    {
-        _stateDelayMs = delay;
-    }
+
+    public void AddDelay(int delay) => _stateDelayMs = delay;
+
+    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => 
+                                    _sendMessages.Enqueue((msg, remoteEndPoint, false));
 
     public void CheckNodes()
     {
@@ -100,6 +101,7 @@ public class Peer : Observable
         StopMulticastSocket();
         _isRun = false;
     }
+    
     public void StrongStop()
     {
         _inactiveThread.Interrupt();
@@ -108,10 +110,7 @@ public class Peer : Observable
         _mulReceiveThread.Interrupt();
     }
 
-    public void AddMsg(GameMessage msg, IPEndPoint remoteEndPoint) => 
-                                        _sendMessages.Enqueue((msg, remoteEndPoint, false));
-
-    public void SendMsg()
+    private void SendMsg()
     {
         while (_isRun)
         {
@@ -124,10 +123,10 @@ public class Peer : Observable
                 var buffer = msg.ToByteArray();
                 _unicastSocket.Send(buffer, buffer.Length, remoteEndPoint);
 
-                if (string.Compare(remoteEndPoint.Address.ToString(), NetConst.MulticastIP) != 0)
-                {
-                    Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
-                }
+                // if (string.Compare(remoteEndPoint.Address.ToString(), NetConst.MulticastIP) != 0)
+                // {
+                //     Update(new PeerEvent(PeerAction.UpdateLastInteraction, remoteEndPoint));
+                // }
                 
                 if (msg.TypeCase != GameMessage.TypeOneofCase.Ack 
                     && msg.TypeCase != GameMessage.TypeOneofCase.Announcement)
@@ -158,7 +157,7 @@ public class Peer : Observable
         }
     }
 
-    public void ReceiveMsg()
+    private void ReceiveMsg()
     {
         while (_isRun)
         {
@@ -199,7 +198,7 @@ public class Peer : Observable
         }
     }
 
-    public void CheckInactiveNodes()
+    private void CheckInactiveNodes()
     {
         while (_isRun)
         {

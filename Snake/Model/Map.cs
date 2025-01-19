@@ -6,11 +6,6 @@ public class Map
 {
     private GameObjects[,] _map;
 
-    public Map(int width, int height)
-    {
-        _map = new GameObjects[width, height];
-        FillFloorMap();
-    }
 
     public int Height => _map.GetLength(1);
 
@@ -20,16 +15,13 @@ public class Map
 
     public GameObjects GetGameObject(GameState.Types.Coord coord) => _map[coord.X, coord.Y];
 
-    private void FillFloorMap()
+
+    public Map(int width, int height)
     {
-        for (var x = 0; x < Width; x++)
-        {
-            for (var y = 0; y < Height; y++)
-            {
-                _map[x, y] = GameObjects.Floor;
-            }
-        }
+        _map = new GameObjects[width, height];
+        FillFloorMap();
     }
+
 
     public void Update(GameModel model, GameState state)
     {
@@ -63,6 +55,17 @@ public class Map
         foreach (var apple in state.Foods)
         {
             _map[apple.X, apple.Y] = GameObjects.Apple;
+        }
+    }
+
+    private void FillFloorMap()
+    {
+        for (var x = 0; x < Width; x++)
+        {
+            for (var y = 0; y < Height; y++)
+            {
+                _map[x, y] = GameObjects.Floor;
+            }
         }
     }
 }

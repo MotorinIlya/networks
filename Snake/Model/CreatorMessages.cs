@@ -6,6 +6,8 @@ namespace Snake.Model;
 public static class CreatorMessages
 {
     private static long _msgSeq = 0;
+
+    
     public static GameMessage CreatePingMsg()
     {
         var pingMsg = new GameMessage.Types.PingMsg();

@@ -253,8 +253,6 @@ public class GameModel : Observable
         _state.Players.Players.Remove(player);
     }
 
-
-
     public int AddPlayer(string name, IPEndPoint endPoint, NodeRole role, GameState.Types.Coord head)
     {
         var player = CreatePlayer(name, endPoint.Address.ToString(), endPoint.Port, role);

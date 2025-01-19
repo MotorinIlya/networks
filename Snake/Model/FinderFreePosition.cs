@@ -6,8 +6,9 @@ namespace Snake.Model;
 
 public static class FinderFreePosition
 {
-
     private static Random _random = new();
+
+    
     public static GameState.Types.Coord? FreePositionSnake(Map map)
     {
         for(var x = 0; x < map.Width; x++)

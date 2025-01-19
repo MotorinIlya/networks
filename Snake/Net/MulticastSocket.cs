@@ -6,8 +6,12 @@ namespace Snake.Net;
 public class MulticastSocket : UdpClient
 {
     private static IPAddress _multicastIP = IPAddress.Parse(NetConst.MulticastIP);
-
     private const int _multicastPort = NetConst.MulticastPort;
+
+
+    public static IPAddress MulticastIP => _multicastIP;
+    public static int MulticastPort => _multicastPort;
+
 
     public MulticastSocket () : base (AddressFamily.InterNetwork)
     {
@@ -16,11 +20,4 @@ public class MulticastSocket : UdpClient
     }
 
     public void Bind () => Client.Bind(new IPEndPoint(IPAddress.Any, MulticastPort)); 
-
-    public static IPAddress MulticastIP => _multicastIP;
-
-    public static int MulticastPort => _multicastPort;
-
-
-    
 }
