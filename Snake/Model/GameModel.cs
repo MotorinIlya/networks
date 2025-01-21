@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using Snake.Net;
 using Snake.Service;
 using Snake.Service.Event;
-using Snake.View.Game;
 
 namespace Snake.Model;
 
@@ -106,7 +104,7 @@ public class GameModel : Observable
         return 0;
     }
 
-    public GamePlayer GetPlayer(int id)
+    public GamePlayer? GetPlayer(int id)
     {
         foreach (var player in Players.Players)
         {
@@ -115,7 +113,8 @@ public class GameModel : Observable
                 return player;
             }
         }
-        throw new Exception();
+        return null;
+        // throw new Exception();
     }
 
     public GamePlayer? GetPlayer(NodeRole role)
@@ -350,6 +349,18 @@ public class GameModel : Observable
     public void SetRole(NodeRole newRole)
     {
         GetMain().Role = newRole;
+    }
+
+    public void SetActualPlayerId()
+    {
+        foreach (var player in Players.Players)
+        {
+            if (_playerId <= player.Id)
+            {
+                _playerId = player.Id;
+            }
+        }
+        _playerId++;
     }
 
     private GameState.Types.Snake SearchSnake(List<GameState.Types.Snake> list, GameState.Types.Coord coord)

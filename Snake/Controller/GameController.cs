@@ -152,6 +152,7 @@ public class GameController : Observer
                     if (msg.RoleChange.ReceiverRole == NodeRole.Master)
                     {
                         var id = _gameModel.SetDeputy();
+                        _gameModel.SetActualPlayerId();
                         CreatorMessages.CreateForAllRoleChangeMsg(_peer, _gameModel, _gameModel.MainId, id);
                         Run();
                     }
