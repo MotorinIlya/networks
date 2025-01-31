@@ -8,5 +8,5 @@ This repository contains laboratory works completed as part of a course on netwo
 - File transfer via TCP with data transfer rate calculation
 - SOCKS Proxy
 - Places (Asynchronous Networking)
-
+- Multiplayer snake
 
